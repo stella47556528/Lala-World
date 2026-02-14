@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的冒險地圖 | My Adventure Log</title>
+    
+    <!-- PWA 相關設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff90a0">
+    <meta name="description" content="我的個人冒險地圖入口網站">
+    
+    <!-- iOS 支援 -->
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root {
+            /* 喬巴風格配色 (粉紅、藍、白) 與 冒險地圖色調 */
+            --primary-color: #ff90a0; /* 喬巴帽子的粉紅 */
+            --primary-dark: #ff7085;
+            --secondary-color: #5ab9ea; /* 藍鼻子的藍 */
+            --bg-color: #fdfdfd;
+            --card-bg: #ffffff;
+            --text-color: #4a4a4a;
+            --accent-color: #ffcb42; /* 草帽/金幣色 */
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 15px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            /* 點狀背景，像航海圖 */
+            background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
+            background-size: 24px 24px; 
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Header 區域 */
+        header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            width: 100%;
+            color: white;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            border-bottom-left-radius: 30px; /* 圓角造型 */
+            border-bottom-right-radius: 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        header p {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 裝飾性的小圓圈 */
+        .decoration {
+            position: absolute;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        /* 區塊標題樣式 */
+        .section-title {
+            width: 90%;
+            max-width: 1000px;
+            margin: 30px 0 15px;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 24px;
+            background-color: var(--secondary-color);
+            margin-right: 12px;
+            border-radius: 4px;
+        }
+
+        /* 卡片容器 */
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            width: 90%;
+            padding-bottom: 20px;
+        }
+
+        /* 卡片本體 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 30px;
+            text-decoration: none;
+            color: var(--text-color);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            border: 2px solid transparent;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--secondary-color);
+        }
+
+        /* 卡片圖示區 */
+        .icon-wrapper {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #f0f7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.4rem;
+            color: #333;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #666;
+            flex-grow: 1; /* 讓文字區撐開 */
+        }
+
+        /* 狀態標籤 */
+        .status-badge {
+            align-self: flex-start;
+            margin-top: 20px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ready {
+            background-color: #e6fffa;
+            color: #2c7a7b;
+            border: 1px solid #b2f5ea;
+        }
+
+        .status-wip {
+            background-color: #fffaf0;
+            color: #c05621;
+            border: 1px solid #fbd38d;
+        }
+
+        /* 針對不同類別的微調 */
+        .card.app .icon-wrapper { background-color: #e3f2fd; color: #2196f3; }
+        .card.trip .icon-wrapper { background-color: #fce4ec; color: #e91e63; }
+        .card.yoga .icon-wrapper { background-color: #fff3e0; color: #ff9800; }
+
+        /* 頁尾 */
+        footer {
+            margin-top: auto;
+            padding: 40px 20px 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #888;
+            width: 100%;
+        }
+
+        /* 手機版優化 */
+        @media (max-width: 600px) {
+            header {
+                padding: 40px 20px 30px;
+                border-bottom-left-radius: 20px;
+                border-bottom-right-radius: 20px;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
+            .container {
+                gap: 20px;
+            }
+            .section-title {
+                font-size: 1.3rem;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <!-- 裝飾圓圈 -->
+        <div class="decoration" style="width: 150px; height: 150px; top: -50px; left: -30px; opacity: 0.2;"></div>
+        <div class="decoration" style="width: 80px; height: 80px; bottom: 10px; right: 40px; opacity: 0.3;"></div>
+        <div class="decoration" style="width: 40px; height: 40px; top: 20px; right: 20%; opacity: 0.15;"></div>
+        
+        <h1 id="greeting">我的冒險地圖</h1>
+        <p>Keep Exploring & Coding</p>
+    </header>
+
+    <!-- 第一區：工具 -->
+    <div class="section-title">🛠️ 冒險道具 (Tools)</div>
+    <div class="container">
+        
+        <!-- 卡片 1: 行程小幫手 App -->
+        <a href="planner.html" class="card app" onclick="checkLink(event, 'planner.html')">
+            <div class="icon-wrapper">📱</div>
+            <h2>行程小幫手 App</h2>
+            <p>我的個人化 PWA 專案。用於管理待辦事項與旅行計畫，支援離線存取，隨時記錄靈感。</p>
+            <span class="status-badge status-ready">已部署 PWA</span>
+        </a>
+
+    </div>
+
+    <!-- 第二區：旅遊與日誌 -->
+    <div class="section-title">🗺️ 探索旅程 (Travel & Adventures)</div>
+    <div class="container">
+
+        <!-- 卡片 2: 大阪之旅 -->
+        <a href="osaka.html" class="card trip" onclick="checkLink(event, 'osaka.html')">
+            <div class="icon-wrapper">🌸</div>
+            <h2>大阪無牛美食之旅</h2>
+            <p>2026 關西冒險記 (2/26 - 3/2)。包含喬巴周邊狩獵地圖與精心挑選的無牛餐廳清單。</p>
+            <span class="status-badge status-ready">準備出發</span>
+        </a>
+
+        <!-- 卡片 3: 空中瑜珈 (WIP) -->
+        <a href="#" class="card yoga" onclick="showWIPMessage(event)">
+            <div class="icon-wrapper">🧘‍♀️</div>
+            <h2>空中瑜珈修煉</h2>
+            <p>記錄我的練習進度、掛布技巧與「內扣」改善的成長日記。持續對抗地心引力中。</p>
+            <span class="status-badge status-wip">建置中</span>
+        </a>
+
+    </div>
+
+    <footer>
+        &copy; 2026 Crafted with ❤️ for your Adventures.
+    </footer>
+
+    <script>
+        // PWA Service Worker 註冊
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then((reg) => console.log('Service Worker 註冊成功:', reg.scope))
+                    .catch((err) => console.log('Service Worker 註冊失敗:', err));
+            });
+        }
+
+        // 簡單的問候語與時間功能
+        document.addEventListener('DOMContentLoaded', () => {
+            const hour = new Date().getHours();
+            const greetingElement = document.getElementById('greeting');
+            let greetingText = '我的冒險地圖';
+
+            if (hour < 12) {
+                greetingText = '早安！準備好冒險了嗎？';
+            } else if (hour < 18) {
+                greetingText = '午安！繼續你的 Coding 之旅';
+            } else {
+                greetingText = '晚安！休息是為了走更長的路';
+            }
+            
+            // 加上淡入效果
+            greetingElement.textContent = greetingText;
+            greetingElement.style.opacity = 0;
+            let opacity = 0;
+            const fadeIn = setInterval(() => {
+                if (opacity >= 1) clearInterval(fadeIn);
+                greetingElement.style.opacity = opacity;
+                opacity += 0.05;
+            }, 30);
+        });
+
+        // 顯示建置中訊息的函式
+        function showWIPMessage(e) {
+            e.preventDefault();
+            const msg = document.createElement('div');
+            msg.style.position = 'fixed';
+            msg.style.top = '50%';
+            msg.style.left = '50%';
+            msg.style.transform = 'translate(-50%, -50%)';
+            msg.style.background = 'rgba(0,0,0,0.85)';
+            msg.style.color = 'white';
+            msg.style.padding = '20px 40px';
+            msg.style.borderRadius = '10px';
+            msg.style.zIndex = '1000';
+            msg.style.textAlign = 'center';
+            msg.innerHTML = '<div style="font-size:2rem;margin-bottom:10px;">🚧</div>頁面努力建置中！<br>內扣練習還沒結束呢！';
+            
+            document.body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.style.transition = 'opacity 0.5s';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            }, 2000);
+        }
+
+        function checkLink(e, url) {
+            console.log(`正在前往: ${url}`);
+        }
+    </script>
+</body>
+</html>
