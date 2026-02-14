@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行程小幫手 Planner</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#cb8161">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="行程小幫手">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"行程小幫手 Planner","short_name":"行程小幫手","description":"文青美學風格的行程 management 工具","start_url":".","display":"standalone","background_color":"#fafaf9","theme_color":"#cb8161","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/854/854878.png","sizes":"512x512","type":"image/png"}]}'>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+        
+        :root {
+            --color-bg: #fafaf9; /* Stone 50 */
+            --color-ongoing: #cb8161; /* Terracotta */
+            --color-completed: #91a398; /* Sage Green */
+            --color-completed-bg: #f1f5f2; /* Light Sage */
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--color-bg);
+            overscroll-behavior: none;
+            color: #44403c;
+        }
+
+        .task-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .status-pending {
+            border-left: 6px solid var(--color-ongoing) !important;
+        }
+
+        .completed {
+            background-color: var(--color-completed-bg) !important;
+            border-color: #d1d5db !important;
+            border-left: 6px solid var(--color-completed) !important;
+            opacity: 0.8;
+        }
+
+        .completed .task-text {
+            text-decoration: line-through;
+            color: #78716c;
+            opacity: 0.6;
+        }
+
+        .modal-enter {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-date-btn.active {
+            color: var(--color-ongoing);
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            font-weight: 700;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: sepia(50%) saturate(500%) hue-rotate(340deg);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen shadow-2xl bg-[#fafaf9] flex flex-col relative border-x border-stone-100">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-30 px-5 py-5 grid grid-cols-12 items-center">
+        <div class="col-span-6 justify-self-start overflow-hidden text-left">
+            <h1 class="text-[18px] font-black text-stone-400 leading-[1.1] tracking-tighter">
+                出門囉!<br>
+                <span class="text-[14px] font-bold text-[#cb8161] block mt-0.5 whitespace-nowrap">記得今天有這些事要做!</span>
+            </h1>
+        </div>
+        
+        <div class="col-span-4 justify-self-center">
+            <div onclick="goToTodayTodo()" class="cursor-pointer bg-[#cb8161] px-3 py-2 rounded-full shadow-lg shadow-orange-100 animate-pulse flex items-center justify-center">
+                <span class="text-xs font-black text-white whitespace-nowrap flex flex-col items-center leading-none">
+                    今天 <span id="todo-count" class="text-base font-black">0</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="col-span-2 justify-self-end">
+            <button onclick="openAddModal()" class="w-10 h-10 bg-stone-700 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                <i class="fas fa-plus text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="flex border-b border-stone-100 text-xs font-medium bg-white">
+        <button onclick="setFilter('todo')" id="tab-todo" class="flex-1 py-4 border-b-2 border-[#cb8161] text-stone-800 font-bold transition-all">進行中</button>
+        <button onclick="setFilter('all')" id="tab-all" class="flex-1 py-4 border-b-2 border-transparent text-stone-400">全部清單</button>
+        <button onclick="setFilter('done')" id="tab-done" class="flex-1 py-4 border-b-2 border-transparent text-stone-400">已達成</button>
+    </nav>
+
+    <!-- Date Filter -->
+    <div class="bg-stone-50/50 p-3 flex flex-col gap-2 border-b border-stone-100">
+        <div class="flex gap-2 overflow-x-auto no-scrollbar">
+            <button onclick="setDayFilter('all')" id="day-filter-all" class="filter-date-btn active px-4 py-1.5 rounded-full text-[10px] tracking-wider transition-all border border-transparent whitespace-nowrap">全部日期</button>
+            <button onclick="setDayFilter('today')" id="day-filter-today" class="filter-date-btn px-4 py-1.5 rounded-full text-[10px] tracking-wider transition-all border border-transparent whitespace-nowrap text-stone-400">今天</button>
+            <button onclick="setDayFilter('tomorrow')" id="day-filter-tomorrow" class="filter-date-btn px-4 py-1.5 rounded-full text-[10px] tracking-wider transition-all border border-transparent whitespace-nowrap text-stone-400">明天</button>
+            <button onclick="setDayFilter('upcoming')" id="day-filter-upcoming" class="filter-date-btn px-4 py-1.5 rounded-full text-[10px] tracking-wider transition-all border border-transparent whitespace-nowrap text-stone-400">未來行程</button>
+            <button onclick="setDayFilter('expired')" id="day-filter-expired" class="filter-date-btn px-4 py-1.5 rounded-full text-[10px] tracking-wider transition-all border border-transparent whitespace-nowrap text-stone-400">已過期</button>
+        </div>
+        <div class="px-2 text-[9px] text-stone-300 font-medium italic text-left">
+            <i class="fas fa-info-circle mr-1"></i> 最多保持過去三天記錄，逾期自動刪除
+        </div>
+    </div>
+
+    <!-- Task List -->
+    <main id="task-list" class="flex-1 overflow-y-auto p-5 space-y-6 no-scrollbar pb-28">
+    </main>
+
+    <!-- Info Button -->
+    <button onclick="toggleInfo()" class="fixed bottom-24 right-7 w-10 h-10 bg-white text-stone-400 rounded-full shadow-xl flex items-center justify-center z-40 active:scale-90 transition-transform border border-stone-100">
+        <i class="fas fa-info text-[10px]"></i>
+    </button>
+
+    <!-- Trash Button -->
+    <button onclick="toggleTrash()" class="fixed bottom-8 right-6 w-12 h-12 bg-stone-800 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform border border-stone-700">
+        <i class="fas fa-archive text-xs"></i>
+    </button>
+
+    <!-- Trash Panel -->
+    <div id="trash-panel" class="fixed inset-0 bg-stone-900/40 z-50 hidden flex items-end justify-center backdrop-blur-[2px]">
+        <div class="bg-stone-800 w-full max-w-md rounded-t-[2.5rem] p-8 h-[75vh] flex flex-col text-stone-100">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-lg font-bold tracking-tight flex items-center gap-2">
+                    <i class="fas fa-history text-stone-400"></i> 回收紀錄
+                </h2>
+                <button onclick="toggleTrash()" class="w-8 h-8 flex items-center justify-center rounded-full bg-stone-700 text-stone-400">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="trash-list" class="flex-1 overflow-y-auto space-y-4 no-scrollbar">
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div id="info-panel" class="fixed inset-0 bg-stone-900/40 z-50 hidden flex items-center justify-center p-6 backdrop-blur-[2px]">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 modal-enter shadow-2xl border-t-4 border-stone-700 flex flex-col text-left">
+            <h2 class="text-lg font-bold mb-6 text-stone-800 flex items-center gap-2">
+                <i class="fas fa-feather-alt text-stone-400"></i> 快速指南
+            </h2>
+            <div class="space-y-5 flex-1">
+                <div class="flex gap-4">
+                    <div class="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">1</div>
+                    <p class="text-xs text-stone-500 leading-relaxed"><span class="text-stone-800 font-bold">新增行程</span>：點擊「＋」，系統僅限選擇今日及未來日期。</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">2</div>
+                    <p class="text-xs text-stone-500 leading-relaxed"><span class="text-stone-800 font-bold">日期過濾</span>：可切換今天、明天、未來或已過期項目。</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">3</div>
+                    <p class="text-xs text-stone-500 leading-relaxed"><span class="text-stone-800 font-bold">一鍵跳轉</span>：點擊頂部「今天」，快速鎖定今日待辦。</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">4</div>
+                    <p class="text-xs text-stone-500 leading-relaxed"><span class="text-stone-800 font-bold">自動清理</span>：系統僅保留過去三天紀錄，逾期將自動刪除。</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">5</div>
+                    <p class="text-xs text-stone-500 leading-relaxed"><span class="text-stone-800 font-bold">資料儲存</span>：紀錄存於瀏覽器，支援 PWA 安裝與離線使用。</p>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-stone-100 text-center">
+                <p class="text-[9px] text-stone-300 font-bold uppercase tracking-widest">Outinglist V1.0</p>
+                <p class="text-[8px] text-stone-300 mt-1 opacity-60 italic">© 2026 黃家騎士團</p>
+            </div>
+
+            <button onclick="toggleInfo()" class="w-full mt-6 py-3.5 rounded-2xl bg-stone-800 text-white font-bold text-[10px] uppercase tracking-[0.2em]">我知道了</button>
+        </div>
+    </div>
+
+    <!-- Editor Modal -->
+    <div id="editor-modal" class="fixed inset-0 bg-stone-900/30 z-50 hidden flex items-center justify-center p-6 backdrop-blur-[1px]">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 modal-enter shadow-2xl border-t-4 border-[#cb8161]">
+            <h3 id="modal-title" class="text-lg font-bold mb-2 text-stone-800 text-center tracking-tight">新增紀錄</h3>
+            
+            <div id="save-hint" class="text-center h-4 mb-4 text-[10px] text-[#cb8161] font-bold opacity-0 transition-opacity text-left">已成功新增紀錄</div>
+
+            <div class="space-y-4">
+                <div class="text-left">
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-1 mb-2 block">預計日期</label>
+                    <input id="date-input" type="date" class="w-full p-4 bg-stone-50 rounded-2xl border border-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-200 text-sm appearance-none">
+                </div>
+                <div class="text-left">
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-1 mb-2 block">目的地</label>
+                    <input id="location-input" type="text" class="w-full p-4 bg-stone-50 rounded-2xl border border-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-200 text-sm" placeholder="想去哪裡？">
+                </div>
+                <div class="text-left">
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-1 mb-2 block">計畫內容</label>
+                    <textarea id="details-input" class="w-full h-24 p-4 bg-stone-50 rounded-2xl border border-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-200 text-sm" placeholder="要做什麼？要買什麼？"></textarea>
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-3 mt-8">
+                <div class="flex gap-3">
+                    <button id="save-continue-btn" onclick="saveTask(true)" class="flex-1 py-4 rounded-2xl bg-stone-700 text-white font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95">儲存並繼續</button>
+                    <button onclick="saveTask(false)" class="flex-1 py-4 rounded-2xl bg-[#cb8161] text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-orange-100 transition-all active:scale-95">儲存並結束</button>
+                </div>
+                <button onclick="closeEditorWithCheck()" class="w-full py-3 rounded-2xl bg-stone-100 text-stone-400 font-bold text-[10px] uppercase tracking-widest transition-all">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alert-modal" class="fixed inset-0 bg-stone-900/20 z-[60] hidden flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-8 shadow-2xl text-center">
+            <div class="w-14 h-14 bg-orange-50 text-[#cb8161] rounded-full flex items-center justify-center mx-auto mb-5">
+                <i class="fas fa-feather-alt text-xl"></i>
+            </div>
+            <h3 class="text-md font-bold mb-2 text-stone-800">尚未儲存</h3>
+            <p class="text-xs text-stone-400 mb-8 leading-relaxed">紀錄尚未保存，確定要離開嗎？</p>
+            <div class="flex flex-col gap-3">
+                <button onclick="saveTask(false)" class="w-full py-3.5 bg-[#cb8161] text-white rounded-2xl text-xs font-bold tracking-widest">立即儲存</button>
+                <button onclick="forceCloseEditor()" class="w-full py-3.5 bg-stone-50 text-stone-400 rounded-2xl text-xs font-bold tracking-widest">放棄修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tasks = [];
+        let trash = [];
+        let currentFilter = 'todo'; 
+        let currentDayFilter = 'all'; 
+        let editingId = null;
+        let originalLocation = "";
+        let originalDetails = "";
+        let originalDate = "";
+
+        function init() {
+            loadData();
+            autoCleanupOldTasks();
+            render();
+            registerPWA();
+        }
+
+        function saveData() {
+            localStorage.setItem('planner_tasks', JSON.stringify(tasks));
+            localStorage.setItem('planner_trash', JSON.stringify(trash));
+        }
+
+        function loadData() {
+            const savedTasks = localStorage.getItem('planner_tasks');
+            const savedTrash = localStorage.getItem('planner_trash');
+            if (savedTasks) tasks = JSON.parse(savedTasks);
+            if (savedTrash) trash = JSON.parse(savedTrash);
+        }
+
+        // 核心修正：使用本地時間取得正確日期字串
+        function getLocalDateStr(dateObj = new Date()) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function autoCleanupOldTasks() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const cutoffDate = new Date(today);
+            cutoffDate.setDate(today.getDate() - 3);
+            const cutoffStr = getLocalDateStr(cutoffDate);
+
+            const initialTaskCount = tasks.length;
+            const initialTrashCount = trash.length;
+
+            // 僅保留日期大於等於三天前的紀錄
+            tasks = tasks.filter(t => t.date >= cutoffStr);
+            trash = trash.filter(t => t.date >= cutoffStr);
+
+            if (tasks.length !== initialTaskCount || trash.length !== initialTrashCount) {
+                saveData();
+            }
+        }
+
+        function registerPWA() {
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    const CACHE_NAME = 'outinglist-v1.1';
+                    self.addEventListener('install', (e) => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./']))));
+                    self.addEventListener('fetch', (e) => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log(err));
+            }
+        }
+
+        function goToTodayTodo() {
+            setFilter('todo');
+            setDayFilter('today');
+        }
+
+        function toggleInfo() {
+            document.getElementById('info-panel').classList.toggle('hidden');
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            const colors = {todo: '#cb8161', all: '#44403c', done: '#91a398'};
+            ['todo', 'all', 'done'].forEach(f => {
+                const btn = document.getElementById(`tab-${f}`);
+                const isActive = f === filter;
+                btn.style.borderColor = isActive ? colors[f] : 'transparent';
+                btn.classList.toggle('text-stone-800', isActive);
+                btn.classList.toggle('font-bold', isActive);
+                btn.classList.toggle('text-stone-400', !isActive);
+            });
+            render();
+        }
+
+        function setDayFilter(day) {
+            currentDayFilter = day;
+            document.querySelectorAll('.filter-date-btn').forEach(btn => {
+                const match = btn.id === `day-filter-${day}`;
+                btn.classList.toggle('active', match);
+                btn.classList.toggle('text-stone-400', !match);
+            });
+            render();
+        }
+
+								
+														  
+		 
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modal-title').innerText = "新增紀錄";
+            document.getElementById('save-continue-btn').classList.remove('hidden');
+            const today = getLocalDateStr();
+            const dateInput = document.getElementById('date-input');
+            dateInput.min = today;
+            dateInput.value = today;
+            document.getElementById('location-input').value = "";
+            document.getElementById('details-input').value = "";
+            originalDate = today;
+            originalLocation = "";
+            originalDetails = "";
+            document.getElementById('editor-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('location-input').focus(), 300);
+        }
+
+        function openEditModal(id) {
+            const task = tasks.find(t => t.id === id);
+            editingId = id;
+            document.getElementById('modal-title').innerText = "修改計畫";
+            document.getElementById('save-continue-btn').classList.add('hidden');
+            const dateInput = document.getElementById('date-input');
+            const today = getLocalDateStr();
+            dateInput.min = today;
+            dateInput.value = task.date;
+            document.getElementById('location-input').value = task.location === "未註明地點" ? "" : task.location;
+            document.getElementById('details-input').value = task.details === "無備註事項" ? "" : task.details;
+            originalDate = task.date;
+            originalLocation = document.getElementById('location-input').value;
+            originalDetails = document.getElementById('details-input').value;
+            document.getElementById('editor-modal').classList.remove('hidden');
+        }
+
+        function saveTask(keepOpen = false) {
+            const dateInput = document.getElementById('date-input').value;
+            const locInput = document.getElementById('location-input').value.trim();
+            const detInput = document.getElementById('details-input').value.trim();
+            const finalLocation = locInput === "" ? "未註明地點" : locInput;
+            const finalDetails = detInput === "" ? "無備註事項" : detInput;
+            const updateTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+            if (editingId) {
+                const index = tasks.findIndex(t => t.id === editingId);
+                tasks[index].date = dateInput;
+                tasks[index].location = finalLocation;
+                tasks[index].details = finalDetails;
+                tasks[index].updateTime = updateTime;
+            } else {
+                tasks.push({ 
+                    id: Date.now(), 
+                    date: dateInput,
+                    location: finalLocation, 
+                    details: finalDetails, 
+                    updateTime: updateTime, 
+                    completed: false 
+                });
+            }
+            saveData();
+            render();
+            if (keepOpen) {
+                document.getElementById('location-input').value = "";
+                document.getElementById('details-input').value = "";
+                const hint = document.getElementById('save-hint');
+                hint.classList.remove('opacity-0');
+                setTimeout(() => hint.classList.add('opacity-0'), 2000);
+                document.getElementById('location-input').focus();
+            } else {
+                forceCloseEditor();
+            }
+        }
+
+        function closeEditorWithCheck() {
+            const currentLoc = document.getElementById('location-input').value.trim();
+            const currentDet = document.getElementById('details-input').value.trim();
+            const currentDate = document.getElementById('date-input').value;
+            if (currentLoc !== originalLocation || currentDet !== originalDetails || currentDate !== originalDate) {
+                document.getElementById('alert-modal').classList.remove('hidden');
+            } else {
+                forceCloseEditor();
+            }
+        }
+
+        function forceCloseEditor() {
+            document.getElementById('alert-modal').classList.add('hidden');
+            document.getElementById('editor-modal').classList.add('hidden');
+            document.getElementById('info-panel').classList.add('hidden');
+            document.getElementById('trash-panel').classList.add('hidden');
+            editingId = null;
+        }
+
+        function toggleComplete(id) {
+            const index = tasks.findIndex(t => t.id === id);
+            tasks[index].completed = !tasks[index].completed;
+            saveData();
+            render();
+        }
+
+        function moveToTrash(id) {
+            const index = tasks.findIndex(t => t.id === id);
+            trash.push(tasks.splice(index, 1)[0]);
+            saveData();
+            render();
+            if (!document.getElementById('trash-panel').classList.contains('hidden')) renderTrash();
+        }
+
+        function restoreFromTrash(id) {
+            const index = trash.findIndex(t => t.id === id);
+            tasks.push(trash.splice(index, 1)[0]);
+            saveData();
+            render();
+            renderTrash();
+        }
+
+        function permanentDelete(id) {
+            trash = trash.filter(t => t.id !== id);
+            saveData();
+            renderTrash();
+        }
+
+        function toggleTrash() {
+            document.getElementById('trash-panel').classList.toggle('hidden');
+            if (!document.getElementById('trash-panel').classList.contains('hidden')) renderTrash();
+        }
+
+        function render() {
+            const list = document.getElementById('task-list');
+            const todoCountEl = document.getElementById('todo-count');
+            const todayStr = getLocalDateStr();
+
+            const todayTodoCount = tasks.filter(t => !t.completed && t.date === todayStr).length;
+            todoCountEl.innerText = todayTodoCount;
+
+            let filteredTasks = tasks;
+            if (currentFilter === 'todo') filteredTasks = tasks.filter(t => !t.completed);
+            if (currentFilter === 'done') filteredTasks = tasks.filter(t => t.completed);
+
+            if (currentDayFilter === 'today') filteredTasks = filteredTasks.filter(t => t.date === todayStr);
+            else if (currentDayFilter === 'tomorrow') {
+                const date = new Date();
+                date.setDate(date.getDate() + 1);
+                const tomStr = getLocalDateStr(date);
+                filteredTasks = filteredTasks.filter(t => t.date === tomStr);
+            }
+            else if (currentDayFilter === 'upcoming') {
+                const date = new Date();
+                date.setDate(date.getDate() + 1);
+                const tomStr = getLocalDateStr(date);
+                filteredTasks = filteredTasks.filter(t => t.date > tomStr);
+            }
+            else if (currentDayFilter === 'expired') filteredTasks = filteredTasks.filter(t => t.date < todayStr);
+
+            filteredTasks.sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+
+            if (filteredTasks.length === 0) {
+                list.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-80 text-stone-200">
+                        <i class="fas fa-calendar-alt text-4xl mb-6 opacity-30"></i>
+                        <p class="text-xs tracking-widest uppercase font-light text-stone-300">此範圍暫無計畫</p>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = filteredTasks.map(task => {
+                const dateParts = task.date.split('-');
+                const dateDisplay = `${dateParts[0]}/${parseInt(dateParts[1])}/${parseInt(dateParts[2])}`;
+                const isToday = task.date === todayStr;
+                const isExpired = task.date < todayStr;
+                
+                return `
+                <div class="task-card bg-white rounded-[2rem] p-7 shadow-sm border border-stone-100 ${task.completed ? 'completed' : 'status-pending'}">
+                    <div class="flex justify-between items-center mb-5 text-base">
+                        <div class="flex items-center gap-3 text-left">
+                            <span class="bg-stone-100 ${isExpired ? 'text-stone-400' : 'text-stone-600'} px-3 py-1.5 rounded-xl font-bold tracking-wider text-[11px]">
+                                ${isToday ? '<span class="text-[#cb8161] mr-1">今天</span>' : ''}
+                                ${isExpired ? '<span class="mr-1">已過期</span>' : ''}
+                                ${dateDisplay}要完成
+                            </span>
+                            <button onclick="openEditModal(${task.id})" class="text-stone-400 hover:text-stone-800 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <button onclick="moveToTrash(${task.id})" class="text-stone-300 hover:text-red-400 transition-colors">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-6 text-left">
+                        <h2 class="task-text font-bold text-xl tracking-tight text-stone-800 mb-2">${task.location}</h2>
+                        <p class="task-text text-base text-stone-500 leading-relaxed font-light">
+                            ${task.details.replace(/\n/g, '<br>')}
+                        </p>
+                        <p class="text-[9px] text-stone-300 mt-3 uppercase tracking-tighter italic">最後更新: ${task.updateTime}</p>
+                    </div>
+
+                    <button onclick="toggleComplete(${task.id})" 
+                            class="w-full py-4.5 rounded-2xl flex items-center justify-center gap-2 text-[12px] font-bold tracking-[0.15em] transition-all uppercase shadow-sm
+                            ${task.completed ? 'bg-white text-[#cb8161] border border-[#cb8161]/30' : 'bg-[#91a398] text-white shadow-[#91a398]/20'}">
+                        <i class="fas ${task.completed ? 'fa-undo' : 'fa-check-circle'}"></i>
+                        ${task.completed ? '回到進行中請按這' : '完成請按這'}
+                    </button>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function renderTrash() {
+            const trashList = document.getElementById('trash-list');
+            if (trash.length === 0) {
+                trashList.innerHTML = `<p class="text-center text-stone-500 py-10 text-xs font-light tracking-widest">目前回收站是空的</p>`;
+                return;
+            }
+            trashList.innerHTML = trash.map(item => `
+                <div class="bg-stone-700/50 p-5 rounded-3xl flex items-center justify-between border border-stone-600/30">
+                    <div class="flex-1 mr-4 overflow-hidden text-left">
+                        <p class="text-xs font-bold truncate text-stone-100"><span class="opacity-50 mr-1">[${item.date}]</span> ${item.location}</p>
+                        <p class="text-[9px] text-stone-400 truncate mt-1">${item.details}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="restoreFromTrash(${item.id})" class="w-9 h-9 bg-white/10 text-stone-100 rounded-full flex items-center justify-center hover:bg-white/20">
+                            <i class="fas fa-undo-alt text-xs"></i>
+                        </button>
+                        <button onclick="permanentDelete(${item.id})" class="w-9 h-9 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center hover:bg-red-500/20">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onclick = e => { 
+            const editorModal = document.getElementById('editor-modal');
+            const infoPanel = document.getElementById('info-panel');
+            const trashPanel = document.getElementById('trash-panel');
+            if (e.target === editorModal || e.target === infoPanel || e.target === trashPanel) {
+                forceCloseEditor();
+            } 
+        }
+        init();
+    </script>
+</body>
+</html>
