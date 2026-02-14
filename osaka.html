@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 大阪冬日五日遊</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
+        .day-tab.active { background-color: white; color: #2563eb; transform: scale(1.05); }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #cbd5e1;
+        }
+        .no-beef { border-left: 4px solid #ef4444; background-color: #fef2f2; }
+        .sticky-nav { position: sticky; top: 0; z-index: 50; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .map-icon { transition: all 0.2s; z-index: 20; display: inline-flex; align-items: center; justify-content: center; }
+        .map-icon:active { transform: scale(0.9); opacity: 0.7; }
+        .activity-icon { font-size: 1.25rem; margin-right: 0.5rem; line-height: 1; vertical-align: middle; }
+        
+        /* 圖片彈出視窗樣式 */
+        #imageModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            overflow: auto;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 95%;
+            max-width: 900px;
+            height: auto;
+            border-radius: 12px;
+            animation: zoomIn 0.3s ease;
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .close-modal {
+            position: fixed;
+            top: 20px;
+            right: 25px;
+            color: white;
+            font-size: 45px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header & Navigation -->
+    <header class="bg-blue-600 text-white shadow-lg sticky-nav">
+        <div class="max-w-4xl mx-auto p-4">
+            <h1 class="text-xl font-bold flex items-center text-white">
+                <span class="mr-2">🇯🇵</span> 2026 大阪冬日五日遊
+            </h1>
+            <div class="flex space-x-2 mt-4 overflow-x-auto scrollbar-hide py-1">
+                <button onclick="showDay('summary')" id="tab-summary" class="day-tab active px-4 py-2 rounded-full bg-white/20 text-sm font-bold transition-all shadow-sm">總覽</button>																																														  
+                <button onclick="showDay(1)" id="tab1" class="day-tab px-4 py-2 rounded-full bg-white/20 text-sm font-bold transition-all shadow-sm">D1 啟程</button>
+                <button onclick="showDay(2)" id="tab2" class="day-tab px-4 py-2 rounded-full bg-white/20 text-sm font-bold transition-all shadow-sm">D2 周遊卡</button>
+                <button onclick="showDay(3)" id="tab3" class="day-tab px-4 py-2 rounded-full bg-white/20 text-sm font-bold transition-all shadow-sm">D3 梅田</button>
+                <button onclick="showDay(4)" id="tab4" class="day-tab px-4 py-2 rounded-full bg-white/20 text-sm font-bold transition-all shadow-sm">D4 動漫</button>
+                <button onclick="showDay(5)" id="tab5" class="day-tab px-4 py-2 rounded-full bg-white/20 text-sm font-bold transition-all shadow-sm">D5 賦歸</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 pb-24 text-slate-800">
+
+        <!-- 總覽分頁 (Summary Page) -->
+        <section id="day-summary" class="day-content block">
+            <!-- 大阪旅遊地圖連結 -->
+            <div class="mb-6 text-slate-800">
+                <a href="https://www.google.com/maps/d/edit?mid=1l3Qyt-Kx28DkBDbLQjRtjYa7kjkv0yk&usp=sharing" target="_blank" class="flex items-center justify-center w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-95">
+                    <span class="mr-2 text-2xl">🗺️</span> 開啟 Google 大阪旅遊地圖
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 text-slate-800">
+                <!-- Day 1 Summary -->
+                <div onclick="showDay(1)" class="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-pink-400 cursor-pointer hover:shadow-md transition-all">
+								 
+						  
+											 
+																									   
+	   
+                    <div class="flex justify-between items-center mb-2">
+				   
+                        <span class="text-pink-500 font-bold text-slate-800">Day 1: 02/26 (四)</span>
+		 
+					  
+                        <span class="text-xs text-slate-400">點擊查看詳情 ></span>
+													 
+                    </div>
+                    <h4 class="font-bold text-lg mb-1 text-slate-800">啟程：新世界霓虹與炸串 🏮</h4>
+                    <p class="text-sm text-slate-500">新今宮飯店入住、通天閣溜滑梯、八重勝炸串。</p>
+                </div>
+
+                <!-- Day 2 Summary -->
+                <div onclick="showDay(2)" class="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-blue-400 cursor-pointer hover:shadow-md transition-all">
+								 
+				   
+                    <div class="flex justify-between items-center mb-2">
+				   
+                        <span class="text-blue-500 font-bold">Day 2: 02/27 (五)</span>
+		 
+					 
+                        <span class="text-xs text-slate-400">點擊查看詳情 ></span>
+						  
+											
+		 
+                    </div>
+                    <h4 class="font-bold text-lg mb-1 text-slate-800">周遊卡：大阪城梅花與道頓堀夜航 🎡</h4>
+                    <p class="text-sm text-slate-500">大阪城、御座船、賞梅、聖瑪麗亞號、鰻魚午餐、晚間道頓堀觀光船。</p>
+                </div>
+
+                <!-- Day 3 Summary -->
+                <div onclick="showDay(3)" class="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-yellow-500 cursor-pointer hover:shadow-md transition-all">
+								 
+				   
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-yellow-600 font-bold">Day 3: 02/28 (六)</span>
+                        <span class="text-xs text-slate-400">點擊查看詳情 ></span>
+		 
+					   
+							  
+                    </div>
+                    <h4 class="font-bold text-lg mb-1 text-slate-800">購物：黑門市場、梅田與喬巴尋寶 🛍️</h4>
+                    <p class="text-sm text-slate-500">黑門市場海鮮、梅田 LUCUA/大丸、空中庭園夕陽、Yukari 大阪燒。</p>
+                </div>
+
+                <!-- Day 4 Summary -->
+		   
+								 
+                <div onclick="showDay(4)" class="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-green-500 cursor-pointer hover:shadow-md transition-all">
+											 
+																									   
+	   
+                    <div class="flex justify-between items-center mb-2">
+				   
+                        <span class="text-green-600 font-bold">Day 4: 03/01 (日)</span>
+                        <span class="text-xs text-slate-400">點擊查看詳情 ></span>
+				  
+							 
+                    </div>
+                    <h4 class="font-bold text-lg mb-1 text-slate-800">動漫：心齋橋甜點與阿倍野夜景 🏙️</h4>
+                    <p class="text-sm text-slate-500">HARBS 水果千層、PARCO 喬巴店、八阪神社、日本橋挖寶、阿倍野夕陽。</p>
+                </div>
+
+                <!-- Day 5 Summary -->
+                <div onclick="showDay(5)" class="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-slate-800 cursor-pointer hover:shadow-md transition-all">
+								 
+				   
+													 
+																									   
+	   
+                    <div class="flex justify-between items-center mb-2">
+				   
+                        <span class="text-slate-800 font-bold">Day 5: 03/02 (一)</span>
+                        <span class="text-xs text-slate-400">點擊查看詳情 ></span>
+				
+					   
+								  
+		 
+							   
+                    </div>
+                    <h4 class="font-bold text-lg mb-1 text-slate-800">賦歸：木津市場早餐 🛫</h4>
+                    <p class="text-sm text-slate-500">木津市場魚市食堂、Rapi:t 特急回機場、CI157 返回桃園。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- DAY 1: 啟程 -->
+         <section id="day1" class="day-content hidden">
+            <div class="bg-pink-50 p-4 rounded-xl mb-6 shadow-sm border border-pink-200">
+                <h3 class="text-pink-600 font-bold flex items-center">
+                    Day 1: 2026/02/26 (四) — 啟程：新世界霓虹與炸串饗宴 🏮
+                </h3>
+            </div>
+            
+            <div class="relative space-y-8 pl-8 timeline-line">
+                <!-- 04:05 停車 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-400 relative">
+                        <a href="https://maps.app.goo.gl/MBiZFDiiuNzEucGf8" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">🚗</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">04:05 - 06:05</span>
+                        </div>
+                        <h4 class="font-bold pr-10">桃園機場 P4 停車場</h4>
+                        <p class="text-xs text-slate-600 mt-1 italic">✅ 已預約 2/26-3/2 停車</p>
+                        <a href="https://pcc.youparking.com.tw/parkingreserve/#/reservedindex/1" target="_blank" class="text-[10px] text-blue-600 underline font-bold mt-2 block italic">👉 預約查詢</a>
+                    </div>
+                </div>
+
+                <!-- 06:05 報到 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative">
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">🛂</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">06:05 - 08:05</span>
+                        </div>
+                        <h4 class="font-bold pr-10">華航櫃台辦理登機</h4>
+                        <p class="text-xs text-slate-500 mt-1 pr-10">託運行李。✈️ <a href="https://www.taoyuan-airport.com/flight_depart" target="_blank" class="text-blue-500 underline font-bold">航班即時資訊</a></p>
+                        <div class="mt-2 p-2 bg-yellow-50 rounded border border-yellow-200 text-[10px]">
+                            <span class="font-bold text-yellow-700">📝 Notes:</span> 在機場先截圖 <span class="text-red-500 font-bold">Visit Japan Web QR Code</span>。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 13:05 Rapi:t -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative">
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">🚆</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">13:05 - 13:40</span>
+                        </div>
+                        <h4 class="font-bold pr-10">南海電鐵 特急 Rapi:t</h4>
+                        <p class="text-[10px] text-slate-500 mt-1 italic">🕒 備案車次：13:35、14:05</p>
+                    </div>
+                </div>
+
+                <!-- 13:50 飯店 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500 relative">
+                        <a href="https://maps.app.goo.gl/GvqAAUzZea4knLAz9" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">🏨</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">13:50 - 14:15</span>
+                        </div>
+                        <h4 class="font-bold pr-10">飯店 Check-in</h4>
+                        <p class="text-[11px] text-slate-500">Grandi Ebisuhonmachi | 西出口步行 2 分鐘。</p>
+                    </div>
+                </div>
+
+                <!-- 14:20 午餐 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative">
+                        <a href="https://www.google.com/maps/search/?api=1&query=六鮮+通天閣本店" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">🍣</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">14:20 - 15:20</span>
+                        </div>
+                        <div class="flex justify-between pr-10">
+                            <h4 class="font-bold text-slate-800">六鮮 通天閣本店</h4>
+                            <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[10px] font-bold">精緻午餐</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-1 italic">🍣 壽司盛合 (10 貫)、海鮮茶碗蒸。</p>
+                    </div>
+                </div>
+
+                <!-- 15:30 通天閣 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative">
+                        <a href="https://maps.app.goo.gl/eqhv5NmnagAN6GBZ9" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">🗼</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">15:30 - 18:00</span>
+                        </div>
+                        <div class="flex justify-between pr-10">
+                            <h4 class="font-bold">通天閣 & TOWER SLIDER</h4>
+                            <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">持卡免費</span>
+                        </div>
+                        <p class="text-xs text-pink-500 font-bold mt-1">✨ 週四平日：溜滑梯免費玩！</p>
+                        <a href="https://gototravel.tw/tsutenkaku-tower-slider/" target="_blank" class="text-[10px] text-blue-600 underline font-bold mt-1 block">👉 溜滑梯換票教學</a>
+                    </div>
+                </div>
+
+                <!-- 18:00 新世界散策 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative">
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">📸</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">18:00 - 19:30</span>
+                        </div>
+                        <h4 class="font-bold pr-10">新世界霓虹散策</h4>
+                        <ul class="text-[11px] text-slate-600 mt-2 space-y-1 pr-10">
+                            <li>📸 <span class="font-bold">魔幻時刻：</span> 拍巨大河豚燈籠。</li>
+                            <li>🛍️ <span class="font-bold">JanJan 橫丁：</span> 靈魂窄巷。</li>
+                            <li>🛒 <span class="font-bold">Mega Donki：</span> 回飯店前大採買。</li>
+                            <li class="bg-blue-50 p-1 rounded text-blue-700 italic">😋 無牛：千成屋果汁、大たこ章魚燒。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 19:30 晚餐 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm no-beef relative">
+                        <a href="https://www.google.com/maps/search/?api=1&query=八重勝" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1">
+                            <span class="activity-icon">🍢</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">19:30 - 21:00</span>
+                        </div>
+                        <h4 class="font-bold pr-10">八重勝炸串</h4>
+                        <div class="mt-2 p-2 bg-red-50 rounded text-[11px] pr-10">
+                            <p class="font-bold text-red-600 block mb-1 underline italic">🚫 避開牛肉點法：</p>
+                            <p>炸豬排串、雞肉串、炸蝦、炸半熟蛋。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 21:00 攝影 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative">
+                        <div class="flex items-center">
+                            <span class="activity-icon">🌃</span>
+                            <span class="text-xs font-mono text-blue-500 font-bold uppercase">21:00 - 21:45</span>
+                        </div>
+                        <h4 class="font-bold mt-1">新世界夜間深度攝影</h4>
+                        <p class="text-xs text-slate-500 mt-1 italic">感受賽博龐克氛圍，步行回飯店休息。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DAY 2: 大阪周遊卡策略 (更新導航) -->
+        <section id="day2" class="day-content hidden text-slate-800">
+            <div class="bg-blue-50 p-4 rounded-xl mb-6 shadow-sm border border-blue-200">
+                <h3 class="text-blue-600 font-bold flex items-center">
+                    <span class="activity-icon">🎡</span> 2026/02/27 (五) — 梅花、鰻魚與道頓堀
+                </h3>
+            </div>
+
+            <div class="relative space-y-8 pl-8 timeline-line">
+                <!-- 07:00 早餐 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative">
+                        <div class="flex items-center mb-1"><span class="activity-icon">🍱</span><span class="text-xs font-mono text-blue-500 font-bold uppercase">07:00 - 08:00</span></div>
+                        <h4 class="font-bold text-slate-800">起床與早點</h4>
+                        <p class="text-xs text-slate-500 mt-1 italic pr-10">便利商店買，可在大阪城公園等候時享用。</p>
+                    </div>
+                </div>
+
+                <!-- 08:00 移動 -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-400">
+                        <a href="https://maps.app.goo.gl/YoY3kpK7QtC24srP6" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1"><span class="activity-icon">🚆</span><span class="text-xs font-mono text-blue-500 font-bold uppercase">08:00 - 08:55</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">前往大阪城御座船換票處</h4>
+                        <div class="mt-2 text-[11px] space-y-1 pr-10 text-slate-600">
+                            <p>🚃 <span class="font-bold text-blue-600">JR環狀線：</span> 新今宮 ➔ 大阪城公園站 (步行 14 分)，需自費。</p>
+                            <p>🚇 <span class="font-bold text-green-700">私鐵：</span> 持周遊卡免費，但步行時間較長。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 09:00 大阪城詳解 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative text-slate-800">
+                        <div class="absolute top-3 right-3 flex space-x-2">
+                            <a href="https://maps.app.goo.gl/dYv7N1coHxxRBfaSA" title="前往天守閣" target="_blank" class="map-icon text-blue-500 bg-blue-50 p-2 rounded-full">
+                                <span class="activity-icon !mr-0">🏯</span>
+                            </a>
+                            <a href="https://maps.app.goo.gl/JHKgfv2xhfDtGvSM8" title="前往梅林" target="_blank" class="map-icon text-blue-500 bg-blue-50 p-2 rounded-full">
+                                <span class="activity-icon !mr-0">🌸</span>
+                            </a>
+                        </div>
+                        <div class="flex items-center mb-1 text-blue-700 font-bold"><span class="activity-icon">🏯</span><span class="text-xs font-mono text-blue-500 font-bold uppercase">09:00 - 12:20</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">天守閣、御座船 & 梅林賞梅</h4>
+                        <div class="mt-3 space-y-3 pr-10 text-[11px]">
+                            <div class="p-2 bg-blue-50 rounded border border-blue-100">
+                                <p class="font-bold text-blue-700">🛶 御座船攻略：</p>
+                                <p class="mt-1">強烈建議 <span class="font-bold text-red-500">09:15</span> 就在售票處排隊。09:30 開始換票 (建議換 11:30)。</p>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded border border-slate-200">
+                                <p class="font-bold text-slate-700">🏯 天守閣攻略：</p>
+                                <p class="mt-1">09:00-17:00。電梯極擠，<span class="text-red-600 font-bold underline">請直接爬樓梯 (共 8 層)</span>，比排隊快很多。</p>
+                            </div>
+                            <div class="p-2 bg-pink-50 rounded border border-pink-100">
+                                <p class="font-bold text-pink-600 text-xs">🌸 梅林賞梅：</p>
+                                <p class="mt-1 italic">2月底盛開！1,200株梅花襯托古城，是大阪最美二月景色。</p>
+                            </div>
+                            <div class="p-2 bg-yellow-50 rounded border border-yellow-200 text-yellow-800">
+                                <p class="font-bold text-yellow-700 italic text-[11px]">⚠️ 完美執行順序：</p>
+                                <p class="text-slate-700 font-bold mt-1 text-[10px]">
+                                    09:15 售票處排隊 ➔ 09:30 換預約券 ➔ 參觀天守閣 ➔ 11:30搭乘御座船 (約 20 分鐘) ➔ 散步穿過梅林往小火車站牌
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 12:20 小火車 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative text-slate-800">
+                        <div class="flex items-center mb-1 text-slate-600"><span class="activity-icon">🚂</span><span class="text-xs font-mono text-blue-500 font-bold uppercase">12:20 - 12:40</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">公園小火車 (Road Train)</h4>
+                        <p class="text-xs text-slate-500 mt-1 italic pr-10">梅林/極樂橋旁 ➔ 「森之宮站前」。(自費 400¥)。大幅節省體力。</p>
+                    </div>
+                </div>
+
+                <!-- 12:45 鰻魚午餐 -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm no-beef relative border-l-4 border-orange-400">
+                        <a href="https://www.google.com/maps/search/?api=1&query=うなぎ處+美味美" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></a>
+                        <div class="flex items-center mb-1"><span class="activity-icon">🍱</span><span class="text-xs font-mono text-blue-500 font-bold uppercase">12:45 - 13:50</span></div>
+                        <h4 class="font-bold pr-10 text-blue-700">鰻魚處 美味美 (已預約)</h4>
+                        <p class="text-xs text-slate-600 mt-1 font-bold italic">😋 無牛：肥厚鰻魚重，醬汁入味，完全無牛肉成分。</p>
+                    </div>
+                </div>
+
+                <!-- 14:10 天保山 (雙導航) -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative text-slate-800">
+                        <div class="absolute top-3 right-3 flex space-x-2">
+                            <a href="https://maps.app.goo.gl/Z6jgWVEoWAePfKvo7" title="聖瑪麗亞號" target="_blank" class="map-icon text-blue-500 bg-blue-50 p-2 rounded-full">
+                                <span class="activity-icon !mr-0">🚢</span>
+                            </a>
+                            <a href="https://maps.app.goo.gl/sNirEdSWtcPqLZUe8" title="摩天輪" target="_blank" class="map-icon text-blue-500 bg-blue-50 p-2 rounded-full">
+                                <span class="activity-icon !mr-0">🎡</span>
+                            </a>
+                        </div>
+                        <div class="flex items-center mb-1 text-blue-600 font-bold"><span class="activity-icon">🚢</span><span class="text-xs font-mono font-bold uppercase">14:10 - 16:30</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">天保山海灣區行程</h4>
+                        <div class="mt-2 text-[11px] space-y-1 text-slate-600">
+                            <p>🚇 交通：地鐵「森之宮站」搭中央線直達「大阪港站」。</p>
+                            <p>🚢 <span class="font-bold text-blue-600">聖瑪麗亞號：</span> 15:00 發船。持卡免費 (45 分鐘)。</p>
+                            <p>🎡 <span class="font-bold text-blue-600">天保山摩天輪：</span> 下船後前往。推薦選「全透明車廂」。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 16:30 移動與換票 (更新導航網址) -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-400 text-slate-800">
+                        <!-- 更新後的道頓堀換票連結 -->
+                        <a href="https://maps.app.goo.gl/ymn8SFaBNVSixj7v7" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></a>
+                        <div class="flex items-center mb-1 text-blue-500"><span class="activity-icon">🚤</span><span class="text-xs font-mono font-bold uppercase">16:30 - 17:30</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">海灣區 ➔ 道頓堀換票</h4>
+                        <div class="mt-2 text-[11px] space-y-1">
+                            <p>🚇 交通：大阪港站 ➔ 本町站轉御堂筋線 ➔ 難波站。</p>
+                            <p>🎟️ <span class="font-bold text-red-600 underline">領取觀光船券：</span> 唐吉訶德下方的售票處。優先換取 20:00 的班次。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 17:40 涮涮鍋晚餐 -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm no-beef relative border-l-4 border-orange-400">
+                        <a href="https://www.google.com/maps/search/?api=1&query=しゃぶ笑+花月店" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></a>
+                        <div class="flex items-center mb-1 text-orange-600"><span class="activity-icon">🍲</span><span class="text-xs font-mono font-bold uppercase">17:40 - 19:15</span></div>
+                        <h4 class="font-bold pr-10">Shabuwara 涮涮鍋 (已預約)</h4>
+                        <p class="text-xs text-slate-600 mt-1 italic font-bold">😋 無牛：國產豬肉一人一鍋。地點：難波 Grand Kagetsu 1F。</p>
+                    </div>
+                </div>
+
+                <!-- 20:00 夜航 & 摩天輪 -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-pink-400">
+                        <div class="flex items-center mb-1 text-pink-600"><span class="activity-icon">🌙</span><span class="text-xs font-mono font-bold uppercase">20:00 - 21:10</span></div>
+                        <h4 class="font-bold pr-10">夜航與惠比壽塔摩天輪</h4>
+                        <div class="mt-2 text-[11px] space-y-1">
+                            <p>🚤 <span class="font-bold text-pink-600">20:00 觀光船：</span> 仰拍夜晚跑跑人固力果。持卡免費。</p>
+                            <p>🎡 <span class="font-bold text-blue-600">惠比壽塔：</span> 橢圓形摩天輪俯瞰夜景 (約 600¥)。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DAY 3: 梅田購物 & 喬巴尋寶 (核心詳細版) -->
+        <section id="day3" class="day-content hidden text-slate-800">
+            <div class="bg-yellow-50 p-4 rounded-xl mb-6 shadow-sm border border-yellow-200 text-slate-800">
+                <h3 class="text-yellow-600 font-bold flex items-center">
+                    <span class="activity-icon">🛍️</span> 2026/02/28 (六) — 黑門與梅田血拚尋寶
+                </h3>
+            </div>
+
+            <div class="relative space-y-8 pl-8 timeline-line text-slate-800">
+                
+                <!-- 09:00 黑門市場 -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-400 text-slate-800">
+                        <a href="https://maps.app.goo.gl/Qo7gvVy1yuAmnW22A" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-slate-800"><span class="activity-icon">🍣</span><span class="text-xs font-mono text-blue-500 uppercase">09:00 - 11:30</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">黑門市場：海鮮早午餐詳解</h4>
+                        
+                        <button onclick="openModal()" class="mt-3 mb-3 bg-blue-600 text-white text-[10px] px-3 py-1.5 rounded-lg flex items-center font-bold shadow-md active:scale-95 transition-all">
+                            <span class="mr-1">🗺️</span> 點擊查看黑門市場詳細攻略地圖
+                        </button>
+
+                        <div class="space-y-4 pr-10">
+                            <div class="text-[11px] space-y-2">
+                                <p class="font-bold text-red-600 border-b border-red-100 pb-1 flex items-center">🏮 必吃排隊名店：</p>
+                                <ul class="text-slate-600 pl-1 space-y-1">
+                                    <li>🥛 <span class="font-bold text-slate-800">高橋食品：</span> 香濃豆漿。</li>
+                                    <li>🍢 <span class="font-bold text-slate-800">石橋食品：</span> 關東煮 (🚫 避牛筋 Suji)。</li>
+                                    <li>🍓 <span class="font-bold text-slate-800">Mitoya 三都屋：</span> 草莓大福。</li>
+                                </ul>
+                                <p class="font-bold text-blue-600 border-b border-blue-100 pb-1 mt-3 flex items-center">🌊 四大海鮮天王：</p>
+                                <ul class="grid grid-cols-2 gap-x-2 gap-y-1 text-slate-600 pl-1 mt-1">
+                                    <li>🐟 <span class="font-bold text-slate-800">黑門三平：</span> 刺身盛合。</li>
+                                    <li>🥩 <span class="font-bold text-slate-800">黑銀鮪魚屋：</span> 頂級鮪魚壽司。</li>
+                                    <li>🐚 <span class="font-bold text-slate-800">魚福：</span> 奶油烤大扇貝。</li>
+                                    <li>🐡 <span class="font-bold text-slate-800">西川鮮魚店：</span> 海膽生蠔。</li>
+                                </ul>
+                                <p class="font-bold text-indigo-600 border-b border-indigo-100 pb-1 mt-3 flex items-center">🛒 購物重點：</p>
+                                <ul class="text-slate-600 pl-1 space-y-1">
+                                    <li>🛍️ <span class="font-bold text-red-500">OS Drug：</span> 藥妝最平。<span class="underline">僅收現金、不刷卡、不退稅</span>。</li>
+                                    <li>🛒 <span class="font-bold text-slate-800">黑門中川超市：</span> 買日本水果。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 11:30 扭蛋之森 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-500">
+                        <a href="https://maps.app.goo.gl/71eTwsVr5BqYEfsj7" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 text-blue-700 font-bold"><span class="activity-icon">🧸</span><span class="text-xs font-mono uppercase">11:30 - 12:45</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">扭蛋之森 梅田茶屋町店</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic pr-10">
+                            🕒 <span class="font-bold">營業時間：11:00 - 22:00</span><br>
+                            抵達梅田第一站！街邊獨立店，機台多且新，適合搜尋稀有喬巴扭蛋。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 12:45 HEP FIVE -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-red-500">
+                        <a href="https://maps.app.goo.gl/w8P3KFMiorj4KtcM8" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 text-red-500 font-bold"><span class="activity-icon">🎡</span><span class="text-xs font-mono uppercase">12:45 - 14:00</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">HEP FIVE：動漫與摩天輪</h4>
+                        <div class="mt-2 text-[10px] space-y-1 text-slate-600 pr-10 italic">
+                            <p>👒 <span class="font-bold text-slate-800">JUMP SHOP (7F)：</span> 搜尋喬巴限定新品。</p>
+                            <p>🧸 <span class="font-bold text-slate-800">扭蛋之森 (9F)：</span> 百貨大規模機台區。</p>
+                            <p>🎡 <span class="font-bold text-red-600">紅色摩天輪 (7F)：</span> 俯瞰梅田市景 (1,000¥)。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 14:00 LUCUA 血拚 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-pink-400 text-slate-800">
+                        <a href="https://maps.app.goo.gl/gZMdtpF5Zo5E2xtk8" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 text-pink-500 font-bold">
+                            <span class="activity-icon">💄</span>
+                            <span class="text-xs font-mono uppercase">14:00 - 15:30</span>
+                        </div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-sm md:text-base">LUCUA & 1100 時尚血拚</h4>
+                        <div class="mt-2 text-[11px] space-y-1 pr-10 text-slate-600">
+                            <p>🕒 <span class="font-bold">10:30 - 20:30</span>。</p>
+                            <p>✨ <span class="font-bold underline">必逛店鋪樓層：</span></p>
+                            <ul class="list-disc list-inside pl-1 space-y-1 text-slate-800 font-bold">
+                                <li>@cosme STORE：LUCUA 2F</li>
+                                <li>lululemon：LUCUA 2F</li>
+                                <li>3COINS+plus：LUCUA 8F</li>
+                            </ul>
+                            <p class="text-[10px] text-indigo-600 font-bold italic mt-2">🎫 退稅：LUCUA 1100 4 樓統一辦理。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 15:30 梅田午餐 (雙導航) -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm no-beef relative border-l-4 border-orange-400 text-slate-800 text-slate-800">
+                        <div class="absolute top-3 right-3 flex space-x-2">
+                            <a href="https://maps.app.goo.gl/ak7PE8WuTnCvwrvd9" title="前往銀座篝" target="_blank" class="map-icon text-blue-500 bg-blue-50 p-2 rounded-full"><span class="activity-icon !mr-0">🍜</span></a>
+                            <a href="https://maps.app.goo.gl/kSH4pgqaUiBpNkqC7" title="前往北極星" target="_blank" class="map-icon text-blue-500 bg-blue-50 p-2 rounded-full"><span class="activity-icon !mr-0">🍛</span></a>
+                        </div>
+                        <div class="flex items-center mb-1 text-orange-600 font-bold"><span class="activity-icon">🥣</span><span class="text-xs font-mono uppercase">15:30 - 16:30</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">梅田午餐 (無牛選單)</h4>
+                        <div class="mt-2 text-[10px] text-slate-600 space-y-3">
+                            <p>🍜 <span class="font-bold text-blue-700 underline">銀座篝 (LUCUA B2F)：</span> 雞白湯拉麵。純雞湯熬製，不含牛。</p>
+                            <p>🍛 <span class="font-bold text-yellow-700 underline">北極星 (大丸 14F)：</span> 雞肉蛋包飯。⚠️ 特別注意：醬汁建議改選 「番茄醬 (Tomato Sauce)」，並向店員確認醬汁不含牛肉 (Beef free)。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 16:30 大丸尋喬巴 -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-orange-500 text-slate-800">
+                        <a href="https://maps.app.goo.gl/FxACqJV3qMGQEFCF7" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 text-orange-600 font-bold"><span class="activity-icon">👒</span><span class="text-xs font-mono uppercase">16:30 - 17:15</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">大丸百貨 13F 麥草商店</h4>
+                        <p class="text-[11px] text-slate-500 mt-1 italic pr-10">
+                            🕒 10:00 - 20:00。喬巴尋寶站。<br>
+                            💡 記得先去 <span class="font-bold text-red-500">1 樓領取 5% 券</span>，最後到 5 樓辦退稅。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 17:15 GARIGUETTE -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-pink-300 text-slate-800">
+                        <a href="https://maps.app.goo.gl/ACQ3QfCH4otFASAm9" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 text-pink-600 font-bold text-slate-800"><span class="activity-icon">🥐</span><span class="text-xs font-mono uppercase">17:15 - 17:45</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">GARIGUETTE 現做千層酥</h4>
+                        <p class="text-[11px] text-slate-500 mt-1 italic pr-10">
+                            📍 Grand Front Osaka (北館 1F)。🕒 11:00 - 19:00。<br>
+                            必吃：現做的圓形法式千層酥 (無牛安心，不可退稅)。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 17:45 梅田空中庭園 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-orange-500 text-slate-800 text-slate-800">
+                        <a href="https://maps.app.goo.gl/4MRf4RrjZvq4782Z6" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 text-orange-500 font-bold text-slate-800"><span class="activity-icon">🌅</span><span class="text-xs font-mono uppercase">17:45 - 19:15</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">梅田空中庭園 夕陽與夜景</h4>
+                        <div class="mt-2 text-[11px] space-y-1 text-slate-600 pr-10">
+                            <p>🕒 09:30 - 22:30。💰 成人 1,500¥。</p>
+                            <p class="font-bold underline text-red-500">🌅 夕陽攻略：今日日落 17:50。建議 17:35 前登樓看落海，隨後賞螢光石步道。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 19:30 大阪燒晚餐 -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm no-beef relative border-l-4 border-orange-400 text-slate-800 text-slate-800 text-slate-800">
+                        <a href="https://maps.app.goo.gl/nUmcVurQbVp5utbH6" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 text-orange-600 font-bold text-slate-800"><span class="activity-icon">🥞</span><span class="text-xs font-mono uppercase">19:30 - 21:00</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-slate-800">大阪燒 Yukari 曾根崎本店</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic pr-10">
+                            🕒 11:00 - 23:00 (LO 22:00)。<br>
+                            😋 <span class="font-bold">推薦 (無牛)：</span>豬肉大阪燒 (豚玉) 或海鮮燒，<span class="text-red-500 underline font-bold">避開牛筋 (Suji) 即可</span>。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 21:15 回飯店與早餐 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-green-500 text-slate-800 text-slate-800 text-slate-800">
+                        <a href="https://maps.app.goo.gl/BMGQSgdLWziuGcqd8" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></a>
+                        <div class="flex items-center mb-1 text-green-600 font-bold"><span class="activity-icon">🏪</span><span class="text-xs font-mono uppercase">21:15</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-slate-800">回飯店休息 & 買明日早餐</h4>
+                        <p class="text-[11px] text-slate-500 mt-1 italic pr-10 text-slate-800">
+                            🚇 交通：搭乘 JR 大阪環狀線直達「新今宮站」。<br>
+                            🏪 <span class="font-bold text-red-500 underline">7-11 西口內店</span> (至 22:00) 買隔天早餐。
+                        </p>
+                    </div>
+                </div>
+                
+			          <!-- 梅田三大購物區彙整表 -->
+                <div class="relative mt-12 mb-6">
+                    <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200">
+                        <h4 class="font-bold text-indigo-700 flex items-center mb-4">
+                            <span class="activity-icon">📊</span> 梅田三大購物區：優惠與退稅彙整表
+                        </h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-[11px] text-slate-700 border-collapse">
+                                <thead>
+                                    <tr class="bg-indigo-100">
+                                        <th class="border border-indigo-200 p-2 text-left">購物地點</th>
+                                        <th class="border border-indigo-200 p-2 text-left">5% 優惠券哪裡領？</th>
+                                        <th class="border border-indigo-200 p-2 text-left">10% 退稅哪裡退？</th>
+                                        <th class="border border-indigo-200 p-2 text-left">備註與重點商店</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border border-indigo-200 p-2 font-bold bg-white">大丸百貨<br>(Daimaru)</td>
+                                        <td class="border border-indigo-200 p-2 bg-white">1 樓 服務台</td>
+                                        <td class="border border-indigo-200 p-2 bg-white">5 樓 退稅櫃檯<br>(免稅中心)</td>
+                                        <td class="border border-indigo-200 p-2 bg-white text-slate-500 italic">喬巴週邊商店適用退稅，但通常不適用 5% 折扣。</td>
+                                    </tr>
+                                    <tr class="bg-slate-50">
+                                        <td class="border border-indigo-200 p-2 font-bold">LUCUA /<br>LUCUA 1100</td>
+                                        <td class="border border-indigo-200 p-2">無通用 5% 優惠券</td>
+                                        <td class="border border-indigo-200 p-2">LUCUA 1100 4 樓<br>免稅櫃檯</td>
+                                        <td class="border border-indigo-200 p-2 text-slate-500 italic font-bold text-indigo-600">最強優勢：樓上樓下發票可累計，一起到 4 樓退稅。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-indigo-200 p-2 font-bold bg-white">Grand Front<br>Osaka</td>
+                                        <td class="border border-indigo-200 p-2 bg-white">北館/南館 1 樓<br>服務台詢問</td>
+                                        <td class="border border-indigo-200 p-2 bg-white">各店舖自行辦理</td>
+                                        <td class="border border-indigo-200 p-2 bg-white text-slate-500 italic">GARIGUETTE 千層酥 (餐飲) 不可退稅。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- DAY 4: 動漫、高空與拉麵 (詳細更新) -->
+        <section id="day4" class="day-content hidden text-slate-800">
+            <div class="bg-green-50 p-4 rounded-xl mb-6 shadow-sm border border-green-200">
+                <h3 class="text-green-600 font-bold flex items-center text-sm md:text-base">
+                    Day 4: 2026/03/01 (日) — 甜點、動漫挖寶與高空日落之旅 🔒
+                </h3>
+            </div>
+
+            <div class="relative space-y-8 pl-8 timeline-line text-slate-800">
+                
+                <!-- 08:30 飯店早餐 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-green-500 text-slate-800">
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon">🍱</span><span class="text-xs font-mono text-blue-500 uppercase">08:30 - 09:15</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-slate-800">飯店悠閒早餐 (7-11)</h4>
+                        <p class="text-[11px] text-slate-500 mt-1 italic text-slate-800">😋 無牛推薦：雞蛋沙拉三明治、鮪魚/海鮮飯糰、炸雞。在 Grandi Ebisuhonmachi 吃完再出發。</p>
+                    </div>
+                </div>
+
+                <!-- 10:00 HARBS (更新導航) -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-pink-400 text-slate-800 text-slate-800">
+                        <!-- 更新後的 HARBS 導航連結 -->
+                        <a href="https://maps.app.goo.gl/CZMaKGycAG9g1qkV8" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-slate-800">🍰</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800">10:00 - 11:45</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">HARBS 大丸心齋橋店 (3F)</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic text-slate-800">✨ 策略：10:00 百貨開門即進店。蛋糕種類最齊全，必點招牌「水果千層蛋糕」。</p>
+                    </div>
+                </div>
+
+                <!-- 12:00 難波八阪神社 (更新導航) -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-green-600 text-slate-800 text-slate-800 text-slate-800">
+                        <!-- 更新後的 八阪神社 導航連結 -->
+                        <a href="https://maps.app.goo.gl/nPfna65kdWD94EZp7" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-slate-800 text-slate-800">👺</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800 text-slate-800 text-slate-800">12:00 - 12:30</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800 text-sm md:text-base">難波八阪神社 (獅子頭)</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic text-slate-800">✨ 必拍：巨大「獅子頭」展望殿。象徵吸走厄運，招來好運與財富。</p>
+                    </div>
+                </div>
+
+                <!-- 12:45 日本橋挖寶 (更新導航) -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-400 text-slate-800 text-slate-800 text-slate-800 text-slate-800">
+                        <!-- 更新後的 日本橋電器街 導航連結 -->
+                        <a href="https://maps.app.goo.gl/Ly6d1YM3ZxfVMV21A" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-blue-500">🎡</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800 text-slate-800 text-slate-800">12:45 - 14:45</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">日本橋電器街：喬巴深度挖寶</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic text-slate-800">📝 搜尋二手動漫店 (Jungle、羅針盤)，挖絕版、珍稀喬巴景品的聖地。</p>
+                    </div>
+                </div>
+
+                <!-- 15:00 京都勝牛 (更新導航) -->
+                <div class="relative text-slate-800 text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm no-beef relative border-l-4 border-orange-400 text-slate-800 text-slate-800">
+                        <!-- 更新後的 阿倍野勝牛 導航連結 -->
+                        <a href="https://maps.app.goo.gl/3M7ZhoC7xQFhRkva9" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-slate-800">🥩</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800 text-slate-800 text-slate-800">15:00 - 15:45</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">京都勝牛 阿倍野店 (午餐)</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic text-slate-800">😋 <span class="font-bold text-red-600 underline">無牛點法：</span>指名「炸里肌豬排定食」或「炸腰內豬排定食」。</p>
+                    </div>
+                </div>
+
+                <!-- 15:45 自由活動 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-600 text-slate-800 text-slate-800">
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-blue-600">🛍️</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">15:45 - 17:30</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-sm md:text-base">阿倍野 Q's Mall / 區內逛街</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic text-slate-800 text-slate-800 text-slate-800">💡 建議：可在登樓前進行最後的服飾補貨與伴手禮搜刮。</p>
+                    </div>
+                </div>
+
+                <!-- 17:45 阿倍野展望台 (更新導航) -->
+                <div class="relative text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-600 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">
+                        <a href="https://maps.app.goo.gl/3hBYhv4rhFMSihAU9" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-blue-700 font-bold text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-blue-700">🏙️</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">17:45 - 19:15</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">阿倍野 Harukas 300 (夕陽與夜景)</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic text-slate-800 font-bold text-red-500 underline text-slate-800 leading-relaxed text-slate-800">🌅 夕陽攻略：17:45 前抵達 60 樓，觀賞 17:52 大阪最高點日落落海，銜接絕美夜景。</p>
+                    </div>
+                </div>
+
+                <!-- 19:30 一蘭晚餐 (更新導航) -->
+                <div class="relative text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-red-500 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">
+                        <a href="https://maps.app.goo.gl/W173hi3YAkk4Mcdh9" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-slate-800">🍜</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">19:30 - 20:30</span></div>
+                        <h4 class="font-bold pr-24 text-slate-800">一蘭拉麵 阿倍野店 (晚餐)</h4>
+                        <p class="text-[11px] text-slate-500 mt-1 italic text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800 text-slate-800">📍 由展望台步行 3 分鐘 (B1F)。天然豚骨湯頭，純豬肉無牛成分。</p>
+                    </div>
+                </div>
+
+                <!-- DAY 4 購物彙整表 -->
+                <div class="relative mt-12 mb-6">
+                    <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200 shadow-sm">
+                        <h4 class="font-bold text-indigo-700 flex items-center mb-4 text-xs md:text-sm">
+                            <span class="activity-icon">📊</span> 心齋橋 & 阿倍野：優惠與退稅彙整表
+                        </h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-[10px] md:text-[11px] text-slate-700 border-collapse bg-white">
+                                <thead>
+                                    <tr class="bg-indigo-100">
+                                        <th class="border border-indigo-200 p-2 text-left">地點</th>
+                                        <th class="border border-indigo-200 p-2 text-left">領取 5% 優惠券</th>
+                                        <th class="border border-indigo-200 p-2 text-left">辦理 10% 退稅</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border border-indigo-200 p-2 font-bold text-slate-800">大丸心齋橋店</td>
+                                        <td class="border border-indigo-200 p-2 italic text-slate-500">本館 1 樓 服務台</td>
+                                        <td class="border border-indigo-200 p-2 italic text-slate-500">南館 4 樓 國際服務中心</td>
+                                    </tr>
+                                    <tr class="bg-slate-50">
+                                        <td class="border border-indigo-200 p-2 font-bold text-slate-800">阿倍野近鐵百貨</td>
+                                        <td class="border border-indigo-200 p-2 italic text-slate-500">塔館 1 樓 服務台</td>
+                                        <td class="border border-indigo-200 p-2 italic text-slate-500">翼館 3.5 樓 國際貴賓服務台</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+				  
+				  
+
+            </div>
+        </section>        
+		
+		<!-- DAY 5: 賦歸之旅 (極致詳細版) -->
+        <section id="day5" class="day-content hidden text-slate-800">
+            <div class="bg-slate-800 text-white p-4 rounded-xl mb-6 shadow-md border border-slate-700">
+                <h3 class="font-bold flex items-center text-sm md:text-base">
+                    Day 5: 2026/03/02 (一) — 木津市場早餐與 CI157 賦歸之旅 🔒
+                </h3>
+            </div>
+
+            <div class="relative space-y-8 pl-8 timeline-line text-slate-800">
+                
+                <!-- 07:00 木津卸売市場 (更新時間與導航) -->
+                <div class="relative text-slate-800">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-green-500">
+                        <a href="https://maps.app.goo.gl/UBRNKZCcgmCkdY6H7" target="_blank" class="map-icon absolute top-3 right-3 text-blue-500 bg-blue-50 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </a>
+                        <div class="flex items-center mb-1 font-bold text-slate-800"><span class="activity-icon">🍱</span><span class="text-xs font-mono text-blue-500 uppercase">07:00 - 08:30</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-sm md:text-base">木津卸売市場 (Kizu Market) 早餐</h4>
+                        <div class="mt-2 text-[11px] space-y-2 text-slate-600">
+                            <p>🚶 <span class="font-bold text-slate-800">交通：</span> 從飯店步行約 12 分鐘抵達。</p>
+                            <p>😋 <span class="font-bold text-slate-800 text-red-600 underline">美食建議：</span> 海鮮丼専門店 魚市食堂、木津壽司 Maruyoshi、川上商店 (蒲燒鰻)。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 南海電鐵 Rapi:t 備註卡 (完整保留) -->
+                <div class="relative">
+                    <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200 shadow-sm ml-[-8px]">
+                        <h4 class="font-bold text-indigo-700 flex items-center mb-3 text-xs">
+                            <span class="activity-icon">💡</span> 南海電鐵 Rapi:t 班次與選位備註
+                        </h4>
+                        <div class="space-y-3 text-[10px] md:text-[11px] text-slate-700">
+                            <div>
+                                <p class="font-bold text-slate-800 border-b border-indigo-100 mb-1">🕒 班次選擇 (新今宮發車)：</p>
+                                <ul class="space-y-1 pl-1">
+                                    <li>• <span class="font-bold text-indigo-600">09:02</span> (α 13) — 抵機場 09:38 (最充裕)</li>
+                                    <li>• <span class="font-bold text-red-600 underline">09:32</span> (α 15) — 抵機場 10:10 (主推，距起飛 2.5h)</li>
+                                    <li>• <span class="font-bold text-slate-500">10:02</span> (α 17) — 抵機場 10:38 (最後緩衝)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 border-b border-indigo-100 mb-1">✨ 選位技巧：</p>
+                                <ul class="space-y-1 pl-1">
+                                    <li>🌊 <span class="font-bold text-blue-700">風景：</span> 優先選 <span class="font-bold">右側 (A/B 排)</span>，過橋時看絕美海景。</li>
+                                    <li>🚀 <span class="font-bold text-blue-700">便利：</span> 選 <span class="font-bold">1 或 2 號車廂</span>，下車離電扶梯最近。</li>
+                                    <li>🔒 <span class="font-bold text-blue-700">行李：</span> 各車廂均設行李鎖櫃，請妥善利用。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 08:30 - 09:10 最後整裝 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-slate-400">
+                        <div class="flex items-center mb-1 font-bold text-slate-800"><span class="activity-icon text-slate-800">🏨</span><span class="text-xs font-mono text-blue-500 uppercase">08:30 - 09:10</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800">飯店最後整裝與退房</h4>
+                        <div class="mt-2 text-[11px] text-slate-500 space-y-1 italic">
+                            <p>🧳 行李打包：將伴手禮塞入，確認公仔妥善保護。</p>
+                            <p>🛂 文件檢查：確認護照、行動電源在隨身包中。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 09:15 準時離開 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-red-600 border-4 border-white animate-pulse"></div>
+                    <div class="bg-red-50 p-4 rounded-xl shadow-sm relative border-l-4 border-red-500">
+                        <div class="flex items-center mb-1 font-bold text-red-600"><span class="activity-icon text-red-600">🚨</span><span class="text-xs font-mono uppercase">09:15</span></div>
+                        <h4 class="font-bold pr-10 text-red-800 italic">準時離開飯店 (Final Deadline)</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic">步行前往南海電鐵「新今宮站」。</p>
+                    </div>
+                </div>
+
+                <!-- 09:32 特急 Rapi:t -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-blue-500 text-slate-800">
+                        <div class="flex items-center mb-1 font-bold text-slate-800"><span class="activity-icon text-slate-800">🚆</span><span class="text-xs font-mono text-blue-500 uppercase">09:32 - 10:10</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-sm md:text-base">交通：特急 Rapi:t α 15</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic">🔒 行李鎖在車廂架上，享受最後的關西海景。</p>
+                    </div>
+                </div>
+
+                <!-- 10:15 - 12:45 關西機場流程 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm relative border-l-4 border-slate-600 text-slate-800">
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-slate-800">🛍️</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800">10:15 - 12:45</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-sm md:text-base">關西機場 (T1)：報到與免稅採買</h4>
+                        <div class="mt-2 text-[11px] space-y-1 text-slate-600">
+                            <p>✈️ <span class="font-bold">報到：</span> 辦理 CI157 登機與行李託運 (12:45 起飛)。</p>
+                            <p>🍫 <span class="font-bold">採買：</span> Royce 巧克力、白色戀人、薯條三兄弟。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 12:45 賦歸 -->
+                <div class="relative">
+                    <div class="absolute -left-[2.15rem] mt-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white"></div>
+                    <div class="bg-blue-50 p-4 rounded-xl shadow-sm relative border-l-4 border-blue-600 text-slate-800">
+                        <div class="flex items-center mb-1 font-bold text-slate-800 text-slate-800 text-slate-800"><span class="activity-icon text-slate-800 text-slate-800">✈️</span><span class="text-xs font-mono text-blue-500 uppercase text-slate-800">12:45</span></div>
+                        <h4 class="font-bold pr-10 text-slate-800 text-sm md:text-base">班機起飛 (CI157) — 賦歸</h4>
+                        <p class="text-[11px] text-slate-600 mt-1 italic text-slate-800">結束愉快的大阪之旅，平安到家！🏡</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+   <!-- 圖片彈出視窗 (核心修正) -->
+    <div id="imageModal" onclick="closeModal()">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" src="https://bobbyfun.tw/wp-content/uploads/pixnet/65406b33d84e23910957902baac7a817.jpg" alt="黑門市場地圖" referrerpolicy="no-referrer" onclick="event.stopPropagation()">
+    </div>
+
+    <!-- Navigation & Modal JS -->
+    <script>
+        function showDay(dayNum) {
+            document.querySelectorAll('.day-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            const targetId = (dayNum === 'summary') ? 'day-summary' : 'day' + dayNum;
+            document.getElementById(targetId).classList.remove('hidden');
+            document.getElementById(targetId).classList.add('block');
+            
+            document.querySelectorAll('.day-tab').forEach(tab => {
+                tab.classList.remove('active', 'bg-white', 'text-blue-600');
+                tab.classList.add('bg-white/20', 'text-white');
+            });
+            const activeTab = (dayNum === 'summary') ? document.getElementById('tab-summary') : document.getElementById('tab' + dayNum);
+            activeTab.classList.add('active', 'bg-white', 'text-blue-600');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Modal 邏輯 (修正顯示問題)
+        function openModal() {
+            document.getElementById('imageModal').style.display = "flex";
+            document.body.style.overflow = "hidden";
+        }
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none";
+            document.body.style.overflow = "auto";
+        }
+    </script>
+</body>
+</html>
