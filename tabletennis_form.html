@@ -1,304 +1,390 @@
-import React, { useState } from 'react';
-import { Users, User, Utensils, Award, Send, CheckCircle2, Loader2 } from 'lucide-react';
-
-export default function App() {
-  const [matchType, setMatchType] = useState('team'); // 'team' (自找搭檔) or 'solo' (大會配對)
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // 新增：送出中的狀態
-
-  // Form State 增加 soloLevel
-  const [formData, setFormData] = useState({
-    p1Level: '',
-    p1Name: '',
-    p1Lunch: '葷',
-    p2Level: '',
-    p2Name: '',
-    p2Lunch: '葷',
-    soloLevel: '',
-    soloName: '',
-    soloLunch: '葷'
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // ==========================================
-    // 請將下方的 URL 替換成您 Google Apps Script 部署後的「網頁應用程式網址」
-    // ==========================================
-    const scriptUrl = https://script.google.com/macros/s/AKfycbwCECDUCYTjtKSuTu44PjAxsQem7gRVknOydVKXWpVRhyKi5CoSHBERy7vMrQwvHc1JLg/exec; 
-
-    try {
-      const response = await fetch(scriptUrl, {
-        method: 'POST',
-        // 為了避免瀏覽器 CORS 預檢請求的問題，使用 text/plain 發送 JSON 字串
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
-        body: JSON.stringify({ matchType, ...formData })
-      });
-
-      if (response.ok) {
-        setIsSubmitted(true);
-      } else {
-        throw new Error('Network response was not ok');
-      }
-    } catch (error) {
-      console.error('提交錯誤:', error);
-      alert('報名發生錯誤，請稍後再試或聯繫管理員。');
-    } finally {
-      setIsSubmitting(false);
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>115 年草屯桌協 第三季會內賽報名表</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* 隱藏元素的通用 class */
+    .hidden-state {
+      display: none !important;
     }
-  };
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-gray-800 antialiased min-h-screen">
 
-  const resetForm = () => {
-    setIsSubmitted(false);
-    setFormData({
-      p1Level: '', p1Name: '', p1Lunch: '葷',
-      p2Level: '', p2Name: '', p2Lunch: '葷',
-      soloLevel: '', soloName: '', soloLunch: '葷'
-    });
-  };
+  <!-- ==================== 成功畫面 (預設隱藏) ==================== -->
+  <div id="success-screen" class="hidden-state min-h-screen p-4 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border-t-4 border-green-500">
+      <i data-lucide="check-circle-2" class="w-16 h-16 text-green-500 mx-auto mb-4"></i>
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">報名成功！</h2>
+      <p class="text-gray-600 mb-6">我們已收到您的報名資料，期待在賽場上見到您。</p>
+      <button 
+        id="btn-reset"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200"
+      >
+        返回重新填寫
+      </button>
+    </div>
+  </div>
 
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-slate-50 p-4 flex items-center justify-center font-sans">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border-t-4 border-green-500">
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">報名成功！</h2>
-          <p className="text-gray-600 mb-6">我們已收到您的報名資料，期待在賽場上見到您。</p>
-          <button 
-            onClick={resetForm}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200"
-          >
-            返回重新填寫
-          </button>
-        </div>
+  <!-- ==================== 表單畫面 ==================== -->
+  <div id="form-screen" class="min-h-screen p-4 md:p-8 flex justify-center">
+    <div class="max-w-xl w-full">
+      <!-- Header -->
+      <div class="bg-blue-700 text-white rounded-t-2xl p-6 shadow-md">
+        <h1 class="text-2xl md:text-3xl font-bold text-center tracking-wide">
+          115 年草屯桌協
+        </h1>
+        <h2 class="text-xl md:text-2xl font-medium text-center mt-1 text-blue-100">
+          第三季會內賽報名表
+        </h2>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex justify-center font-sans">
-      <div className="max-w-xl w-full">
-        {/* Header */}
-        <div className="bg-blue-700 text-white rounded-t-2xl p-6 shadow-md">
-          <h1 className="text-2xl md:text-3xl font-bold text-center tracking-wide">
-            115 年草屯桌協
-          </h1>
-          <h2 className="text-xl md:text-2xl font-medium text-center mt-1 text-blue-100">
-            第三季會內賽報名表
-          </h2>
+      <!-- Main Form Container -->
+      <div class="bg-white rounded-b-2xl shadow-lg p-6 md:p-8">
+        
+        <!-- Match Type Selection -->
+        <div class="mb-8">
+          <label class="block text-sm font-semibold text-gray-700 mb-3">請選擇報名方式：</label>
+          <div class="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              id="btn-team"
+              class="py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 transition-all border-blue-600 bg-blue-50 text-blue-700 font-bold"
+            >
+              <i data-lucide="users" class="w-5 h-5"></i>
+              1. 自找搭檔
+            </button>
+            <button
+              type="button"
+              id="btn-solo"
+              class="py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 transition-all border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
+              <i data-lucide="user" class="w-5 h-5"></i>
+              2. 大會配對
+            </button>
+          </div>
         </div>
 
-        {/* Main Form Container */}
-        <div className="bg-white rounded-b-2xl shadow-lg p-6 md:p-8">
+        <form id="registration-form" class="space-y-8">
           
-          {/* Match Type Selection */}
-          <div className="mb-8">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">請選擇報名方式：</label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setMatchType('team')}
-                className={`py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 transition-all ${
-                  matchType === 'team' 
-                    ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold' 
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Users size={20} />
-                1. 自找搭檔
-              </button>
-              <button
-                type="button"
-                onClick={() => setMatchType('solo')}
-                className={`py-3 px-4 rounded-xl flex items-center justify-center gap-2 border-2 transition-all ${
-                  matchType === 'solo' 
-                    ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold' 
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <User size={20} />
-                2. 大會配對
-              </button>
+          <!-- ==================== Mode 1: Team ==================== -->
+          <div id="section-team" class="space-y-6">
+            <!-- Player A -->
+            <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 relative">
+              <div class="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">1.</div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                    <i data-lucide="user" class="w-4 h-4 text-gray-400"></i> 姓名
+                  </label>
+                  <input required type="text" name="p1Name" placeholder="請輸入姓名"
+                    class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                </div>
+                <div>
+                  <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                    <i data-lucide="award" class="w-4 h-4 text-gray-400"></i> 級數
+                  </label>
+                  <input required type="text" name="p1Level" placeholder="例如：3.5"
+                    class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
+                  <i data-lucide="utensils" class="w-4 h-4 text-gray-400"></i> 中餐選項
+                </label>
+                <div class="flex gap-4">
+                  <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="p1Lunch" value="葷" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                    <span class="ml-2 text-gray-700">葷</span>
+                  </label>
+                  <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="p1Lunch" value="素" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                    <span class="ml-2 text-gray-700">素</span>
+                  </label>
+                  <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="p1Lunch" value="不用餐" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                    <span class="ml-2 text-gray-700">不用餐</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Player B -->
+            <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 relative">
+              <div class="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">2.</div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                    <i data-lucide="user" class="w-4 h-4 text-gray-400"></i> 姓名
+                  </label>
+                  <input required type="text" name="p2Name" placeholder="請輸入姓名"
+                    class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                </div>
+                <div>
+                  <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                    <i data-lucide="award" class="w-4 h-4 text-gray-400"></i> 級數
+                  </label>
+                  <input required type="text" name="p2Level" placeholder="例如：3.0"
+                    class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
+                  <i data-lucide="utensils" class="w-4 h-4 text-gray-400"></i> 中餐選項
+                </label>
+                <div class="flex gap-4">
+                  <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="p2Lunch" value="葷" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                    <span class="ml-2 text-gray-700">葷</span>
+                  </label>
+                  <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="p2Lunch" value="素" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                    <span class="ml-2 text-gray-700">素</span>
+                  </label>
+                  <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="p2Lunch" value="不用餐" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                    <span class="ml-2 text-gray-700">不用餐</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            
-            {/* --- Mode 1: Team --- */}
-            {matchType === 'team' && (
-              <div className="space-y-6">
-                {/* Player A */}
-                <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 relative">
-                  <div className="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">1.</div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div>
-                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
-                        <User size={16} className="text-gray-400"/> 姓名
-                      </label>
-                      <input 
-                        required type="text" name="p1Name" placeholder="請輸入姓名"
-                        value={formData.p1Name} onChange={handleInputChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
-                        <Award size={16} className="text-gray-400"/> 級數
-                      </label>
-                      <input 
-                        required type="text" name="p1Level" placeholder="例如：3.5"
-                        value={formData.p1Level} onChange={handleInputChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
-                      <Utensils size={16} className="text-gray-400"/> 中餐選項
-                    </label>
-                    <div className="flex gap-4">
-                      {['葷', '素', '不用餐'].map(option => (
-                        <label key={`p1-${option}`} className="flex items-center cursor-pointer">
-                          <input 
-                            type="radio" name="p1Lunch" value={option}
-                            checked={formData.p1Lunch === option} onChange={handleInputChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                          />
-                          <span className="ml-2 text-gray-700">{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Player B */}
-                <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 relative">
-                  <div className="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">2.</div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div>
-                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
-                        <User size={16} className="text-gray-400"/> 姓名
-                      </label>
-                      <input 
-                        required type="text" name="p2Name" placeholder="請輸入姓名"
-                        value={formData.p2Name} onChange={handleInputChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
-                        <Award size={16} className="text-gray-400"/> 級數
-                      </label>
-                      <input 
-                        required type="text" name="p2Level" placeholder="例如：3.0"
-                        value={formData.p2Level} onChange={handleInputChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
-                      <Utensils size={16} className="text-gray-400"/> 中餐選項
-                    </label>
-                    <div className="flex gap-4">
-                      {['葷', '素', '不用餐'].map(option => (
-                        <label key={`p2-${option}`} className="flex items-center cursor-pointer">
-                          <input 
-                            type="radio" name="p2Lunch" value={option}
-                            checked={formData.p2Lunch === option} onChange={handleInputChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                          />
-                          <span className="ml-2 text-gray-700">{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+          <!-- ==================== Mode 2: Solo ==================== -->
+          <div id="section-solo" class="hidden-state bg-gray-50 p-5 rounded-xl border border-gray-100 relative mt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div>
+                <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                  <i data-lucide="user" class="w-4 h-4 text-gray-400"></i> 姓名
+                </label>
+                <input type="text" name="soloName" placeholder="請輸入姓名"
+                  class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
               </div>
-            )}
-
-            {/* --- Mode 2: Solo --- */}
-            {matchType === 'solo' && (
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 relative mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                  <div>
-                    <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
-                      <User size={16} className="text-gray-400"/> 姓名
-                    </label>
-                    <input 
-                      required type="text" name="soloName" placeholder="請輸入姓名"
-                      value={formData.soloName} onChange={handleInputChange}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
-                      <Award size={16} className="text-gray-400"/> 級數
-                    </label>
-                    <input 
-                      required type="text" name="soloLevel" placeholder="例如：3.0"
-                      value={formData.soloLevel} onChange={handleInputChange}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
-                    <Utensils size={16} className="text-gray-400"/> 中餐選項
-                  </label>
-                  <div className="flex gap-4">
-                    {['葷', '素', '不用餐'].map(option => (
-                      <label key={`solo-${option}`} className="flex items-center cursor-pointer">
-                        <input 
-                          type="radio" name="soloLunch" value={option}
-                          checked={formData.soloLunch === option} onChange={handleInputChange}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-gray-700">{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+              <div>
+                <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                  <i data-lucide="award" class="w-4 h-4 text-gray-400"></i> 級數
+                </label>
+                <input type="text" name="soloLevel" placeholder="例如：3.0"
+                  class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
               </div>
-            )}
+            </div>
 
-            {/* Submit Button */}
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full text-white font-bold py-3.5 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg mt-8 ${
-                isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  報名資料傳送中...
-                </>
-              ) : (
-                <>
-                  <Send size={20} />
-                  確認送出報名
-                </>
-              )}
-            </button>
+            <div class="mt-4">
+              <label class="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
+                <i data-lucide="utensils" class="w-4 h-4 text-gray-400"></i> 中餐選項
+              </label>
+              <div class="flex gap-4">
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="soloLunch" value="葷" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                  <span class="ml-2 text-gray-700">葷</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="soloLunch" value="素" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                  <span class="ml-2 text-gray-700">素</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="soloLunch" value="不用餐" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
+                  <span class="ml-2 text-gray-700">不用餐</span>
+                </label>
+              </div>
+            </div>
+          </div>
 
-          </form>
-        </div>
+          <!-- Submit Button -->
+          <button 
+            type="submit"
+            id="btn-submit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg mt-8"
+          >
+            <!-- 正常狀態 -->
+            <div id="submit-text" class="flex items-center gap-2">
+              <i data-lucide="send" class="w-5 h-5"></i>
+              確認送出報名
+            </div>
+            <!-- 載入狀態 (預設隱藏) -->
+            <div id="submit-loading" class="hidden-state flex items-center gap-2">
+              <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+              報名資料傳送中...
+            </div>
+          </button>
+
+        </form>
       </div>
     </div>
-  );
-}
+  </div>
+
+  <!-- ==================== JavaScript 邏輯 ==================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 初始化 Lucide 圖示
+      lucide.createIcons();
+
+      // ====== 狀態與 DOM 元素 ======
+      let currentMode = 'team'; // 預設模式
+      
+      const btnTeam = document.getElementById('btn-team');
+      const btnSolo = document.getElementById('btn-solo');
+      const sectionTeam = document.getElementById('section-team');
+      const sectionSolo = document.getElementById('section-solo');
+      
+      const form = document.getElementById('registration-form');
+      const formScreen = document.getElementById('form-screen');
+      const successScreen = document.getElementById('success-screen');
+      const btnReset = document.getElementById('btn-reset');
+      
+      const btnSubmit = document.getElementById('btn-submit');
+      const submitText = document.getElementById('submit-text');
+      const submitLoading = document.getElementById('submit-loading');
+
+      // ==========================================
+      // 請將下方的 URL 替換成您 Google Apps Script 部署後的「網頁應用程式網址」
+      // ==========================================
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbwCECDUCYTjtKSuTu44PjAxsQem7gRVknOydVKXWpVRhyKi5CoSHBERy7vMrQwvHc1JLg/exec';
+
+      // ====== 切換模式函數 ======
+      function setMode(mode) {
+        currentMode = mode;
+        
+        // 設定活躍與非活躍的按鈕樣式
+        const activeClass = 'border-blue-600 bg-blue-50 text-blue-700 font-bold'.split(' ');
+        const inactiveClass = 'border-gray-200 text-gray-600 hover:bg-gray-50'.split(' ');
+
+        if (mode === 'team') {
+          // 更新按鈕
+          btnTeam.classList.remove(...inactiveClass);
+          btnTeam.classList.add(...activeClass);
+          btnSolo.classList.remove(...activeClass);
+          btnSolo.classList.add(...inactiveClass);
+          
+          // 顯示/隱藏區塊
+          sectionTeam.classList.remove('hidden-state');
+          sectionSolo.classList.add('hidden-state');
+          
+          // 開啟/關閉必填驗證 (防止隱藏的 input 阻擋表單送出)
+          toggleInputs(sectionTeam, true);
+          toggleInputs(sectionSolo, false);
+        } else {
+          btnSolo.classList.remove(...inactiveClass);
+          btnSolo.classList.add(...activeClass);
+          btnTeam.classList.remove(...activeClass);
+          btnTeam.classList.add(...inactiveClass);
+          
+          sectionSolo.classList.remove('hidden-state');
+          sectionTeam.classList.add('hidden-state');
+          
+          toggleInputs(sectionTeam, false);
+          toggleInputs(sectionSolo, true);
+        }
+      }
+
+      // 控制 Input 是否啟用 (被 disabled 的 Input 不會被送出也不會觸發 required 驗證)
+      function toggleInputs(section, enable) {
+        const inputs = section.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
+          input.disabled = !enable;
+          if (enable) {
+            input.setAttribute('required', 'true');
+          } else {
+            input.removeAttribute('required');
+          }
+        });
+        
+        // Radio 按鈕只要 disabled 就好
+        const radios = section.querySelectorAll('input[type="radio"]');
+        radios.forEach(radio => {
+          radio.disabled = !enable;
+        });
+      }
+
+      // 初始化頁面預設模式
+      setMode('team');
+
+      // 監聽模式切換點擊
+      btnTeam.addEventListener('click', () => setMode('team'));
+      btnSolo.addEventListener('click', () => setMode('solo'));
+
+      // ====== 表單送出處理 ======
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. 切換成載入中狀態
+        btnSubmit.disabled = true;
+        btnSubmit.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        btnSubmit.classList.add('bg-blue-400', 'cursor-not-allowed');
+        submitText.classList.add('hidden-state');
+        submitLoading.classList.remove('hidden-state');
+
+        // 2. 收集表單資料
+        const formData = new FormData(form);
+        const dataObj = { matchType: currentMode };
+        
+        formData.forEach((value, key) => {
+          dataObj[key] = value;
+        });
+
+        // 3. 發送 API
+        try {
+          // 如果還是預設的 URL，先模擬成功讓您看特效
+          if (scriptUrl === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+            console.log('準備提交的資料：', dataObj);
+            await new Promise(resolve => setTimeout(resolve, 1500)); // 模擬等待 1.5 秒
+            showSuccess();
+          } else {
+            // 實際發送到 Google Apps Script
+            const response = await fetch(scriptUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+              },
+              body: JSON.stringify(dataObj)
+            });
+
+            if (response.ok) {
+              showSuccess();
+            } else {
+              throw new Error('Network response was not ok');
+            }
+          }
+        } catch (error) {
+          console.error('提交錯誤:', error);
+          alert('報名發生錯誤，請稍後再試或聯繫管理員。');
+        } finally {
+          // 4. 恢復按鈕狀態
+          btnSubmit.disabled = false;
+          btnSubmit.classList.add('bg-blue-600', 'hover:bg-blue-700');
+          btnSubmit.classList.remove('bg-blue-400', 'cursor-not-allowed');
+          submitText.classList.remove('hidden-state');
+          submitLoading.classList.add('hidden-state');
+        }
+      });
+
+      // ====== 成功與重置邏輯 ======
+      function showSuccess() {
+        formScreen.classList.add('hidden-state');
+        successScreen.classList.remove('hidden-state');
+      }
+
+      btnReset.addEventListener('click', () => {
+        form.reset();
+        setMode('team'); // 回到預設狀態
+        successScreen.classList.add('hidden-state');
+        formScreen.classList.remove('hidden-state');
+      });
+
+    });
+  </script>
+</body>
+</html>
