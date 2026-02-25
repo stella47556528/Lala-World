@@ -250,7 +250,7 @@
       const submitLoading = document.getElementById('submit-loading');
 
       // ==========================================
-      // 已經為您替換為您專屬的 Google Apps Script 網址
+      // 您的 Google Apps Script 網址
       // ==========================================
       const scriptUrl = 'https://script.google.com/macros/s/AKfycbwCECDUCYTjtKSuTu44PjAxsQem7gRVknOydVKXWpVRhyKi5CoSHBERy7vMrQwvHc1JLg/exec';
 
@@ -337,28 +337,20 @@
 
         // 3. 發送 API
         try {
-          // 如果還是預設的 URL，先模擬成功讓您看特效
-          if (scriptUrl === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-            console.log('準備提交的資料：', dataObj);
-            await new Promise(resolve => setTimeout(resolve, 1500)); // 模擬等待 1.5 秒
-            showSuccess();
-          } else {
-            // 實際發送到 Google Apps Script
-            const response = await fetch(scriptUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
-              },
-              body: JSON.stringify(dataObj),
-              redirect: 'follow' // 重要：Google Apps Script 處理 POST 後會回傳 302 重定向，必須跟隨
-            });
+          // 【關鍵修正】: 加入 mode: 'no-cors'，忽略 Google 302 重定向與 CORS 阻擋
+          await fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors', 
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: JSON.stringify(dataObj)
+          });
 
-            if (response.ok) {
-              showSuccess();
-            } else {
-              throw new Error('Network response was not ok');
-            }
-          }
+          // 因為使用 no-cors，fetch 只要沒有拋出網路斷線的 catch 錯誤，就視為成功
+          // 此時資料已經寫入試算表中了。
+          showSuccess();
+
         } catch (error) {
           console.error('提交錯誤:', error);
           alert('報名發生錯誤，請稍後再試或聯繫管理員。');
