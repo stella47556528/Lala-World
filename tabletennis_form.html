@@ -337,19 +337,26 @@
 
         // 3. 發送 API
         try {
-          // 【關鍵修正】: 加入 mode: 'no-cors'，忽略 Google 302 重定向與 CORS 阻擋
-          await fetch(scriptUrl, {
+          // 移除 mode: 'no-cors'，我們需要讀取 Google 回傳的 JSON 結果來判斷是否重複
+          const response = await fetch(scriptUrl, {
             method: 'POST',
-            mode: 'no-cors', 
             headers: {
               'Content-Type': 'text/plain;charset=utf-8',
             },
             body: JSON.stringify(dataObj)
           });
 
-          // 因為使用 no-cors，fetch 只要沒有拋出網路斷線的 catch 錯誤，就視為成功
-          // 此時資料已經寫入試算表中了。
-          showSuccess();
+          // 解析 Google 回傳的 JSON 資料
+          const resultData = await response.json();
+
+          if (resultData.result === 'success') {
+            showSuccess();
+          } else if (resultData.result === 'duplicate') {
+            // 如果重複報名，跳出警告提示使用者
+            alert(resultData.message);
+          } else {
+            throw new Error(resultData.message || '發生未知錯誤');
+          }
 
         } catch (error) {
           console.error('提交錯誤:', error);
