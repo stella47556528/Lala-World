@@ -250,7 +250,7 @@
       const submitLoading = document.getElementById('submit-loading');
 
       // ==========================================
-      // 請將下方的 URL 替換成您 Google Apps Script 部署後的「網頁應用程式網址」
+      // 已經為您替換為您專屬的 Google Apps Script 網址
       // ==========================================
       const scriptUrl = 'https://script.google.com/macros/s/AKfycbwCECDUCYTjtKSuTu44PjAxsQem7gRVknOydVKXWpVRhyKi5CoSHBERy7vMrQwvHc1JLg/exec';
 
@@ -349,7 +349,8 @@
               headers: {
                 'Content-Type': 'text/plain;charset=utf-8',
               },
-              body: JSON.stringify(dataObj)
+              body: JSON.stringify(dataObj),
+              redirect: 'follow' // 重要：Google Apps Script 處理 POST 後會回傳 302 重定向，必須跟隨
             });
 
             if (response.ok) {
