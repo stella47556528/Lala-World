@@ -320,6 +320,17 @@
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // 0. 前端初步驗證：檢查雙打名字是否重複
+        const formData = new FormData(form);
+        if (currentMode === 'team') {
+          const p1Name = formData.get('p1Name').trim();
+          const p2Name = formData.get('p2Name').trim();
+          if (p1Name === p2Name && p1Name !== '') {
+            alert('報名失敗：選手1與選手2的姓名不能重複，請重新確認！');
+            return; // 終止送出流程
+          }
+        }
+
         // 1. 切換成載入中狀態
         btnSubmit.disabled = true;
         btnSubmit.classList.remove('bg-blue-600', 'hover:bg-blue-700');
@@ -328,7 +339,6 @@
         submitLoading.classList.remove('hidden-state');
 
         // 2. 收集表單資料
-        const formData = new FormData(form);
         const dataObj = { matchType: currentMode };
         
         formData.forEach((value, key) => {
