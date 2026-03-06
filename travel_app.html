@@ -76,7 +76,9 @@
     }
     initFormState();
 
-    const formatNum = (num) => Number(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    // 修復: 統一名稱為 formatCurrency 避免 ReferenceError 崩潰
+    const formatCurrency = (amount) => Number(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    
     const saveMembers = () => localStorage.setItem('travel_members', JSON.stringify(state.members));
     const openSheet = () => { if(GOOGLE_SHEET_URL) window.open(GOOGLE_SHEET_URL, '_blank'); };
     function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('loading-overlay').classList.replace('hidden', 'flex'); }
@@ -224,19 +226,37 @@
     // 頁籤切換與渲染
     function switchTab(tab) {
       state.activeTab = tab;
+      
+      // 修復: 放棄使用 replace() 改用 remove() & add() 確保強健性
       ['add', 'settle'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (btn) {
-          btn.classList.replace('text-indigo-600', 'text-slate-400');
-          btn.querySelector('svg, i')?.classList.replace('text-indigo-700', 'text-slate-400');
+          btn.classList.remove('text-indigo-600');
+          btn.classList.add('text-slate-400');
+          const icon = btn.querySelector('svg, i');
+          if (icon) {
+            icon.classList.remove('text-indigo-700');
+            icon.classList.add('text-slate-400');
+          }
         }
       });
+      
       const activeBtn = document.getElementById(`nav-${tab}`);
       if (activeBtn) {
-        activeBtn.classList.replace('text-slate-400', 'text-indigo-600');
-        activeBtn.querySelector('svg, i')?.classList.replace('text-slate-400', 'text-indigo-700');
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('text-indigo-600');
+        const activeIcon = activeBtn.querySelector('svg, i');
+        if (activeIcon) {
+          activeIcon.classList.remove('text-slate-400');
+          activeIcon.classList.add('text-indigo-700');
+        }
       }
-      document.getElementById('nav-add-icon-bg')?.classList.toggle('bg-indigo-100', tab === 'add');
+      
+      const addBg = document.getElementById('nav-add-icon-bg');
+      if (addBg) {
+        if (tab === 'add') addBg.classList.add('bg-indigo-100');
+        else addBg.classList.remove('bg-indigo-100');
+      }
 
       if (tab === 'settle' && state.cloudData.twd.length === 0 && state.cloudData.foreign.length === 0) {
         fetchCloudData();
@@ -278,7 +298,7 @@
                     </div>
                     <span class="font-black text-slate-700 w-12 text-center">${txn.to}</span>
                   </div>
-                  <span class="font-black text-${color}-700 text-lg tracking-tight">${symbol} ${formatNum(txn.amount)}</span>
+                  <span class="font-black text-${color}-700 text-lg tracking-tight">${symbol} ${formatCurrency(txn.amount)}</span>
                 </div>
               `).join('')}
             </div>
@@ -293,8 +313,8 @@
                 <div class="flex justify-between items-center p-3.5 ${idx !== arr.length -1 ? 'border-b border-slate-100' : ''}">
                   <span class="font-bold text-slate-700">${person}</span>
                   <div class="text-right">
-                    ${balance > 0.01 ? `<span class="text-emerald-700 font-black bg-emerald-50 px-2 py-1 rounded text-sm border border-emerald-100">應收 ${formatNum(balance)}</span>`
-                    : balance < -0.01 ? `<span class="text-rose-600 font-black bg-rose-50 px-2 py-1 rounded text-sm border border-rose-100">應付 ${formatNum(Math.abs(balance))}</span>`
+                    ${balance > 0.01 ? `<span class="text-emerald-700 font-black bg-emerald-50 px-2 py-1 rounded text-sm border border-emerald-100">應收 ${formatCurrency(balance)}</span>`
+                    : balance < -0.01 ? `<span class="text-rose-600 font-black bg-rose-50 px-2 py-1 rounded text-sm border border-rose-100">應付 ${formatCurrency(Math.abs(balance))}</span>`
                     : `<span class="text-slate-400 font-bold text-sm bg-slate-50 px-2 py-1 rounded border border-slate-100">已結清</span>`}
                   </div>
                 </div>
@@ -342,7 +362,7 @@
                  <label class="flex items-center p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-300 transition-colors">
                    <input type="checkbox" onchange="toggleInvolvedMember('${m}')" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 mr-3" />
                    <span class="text-sm font-bold text-slate-700 flex-1">${m}</span>
-                   ${isChecked ? `<span id="equal-amt-${m}" class="text-sm ${mode==='foreign'?'text-indigo-600':'text-emerald-600'} font-black">${prefix}${formatNum(amt)}</span>` : ''}
+                   ${isChecked ? `<span id="equal-amt-${m}" class="text-sm ${mode==='foreign'?'text-indigo-600':'text-emerald-600'} font-black">${prefix}${formatCurrency(amt)}</span>` : ''}
                  </label>
                `}).join('')}
              </div>
@@ -558,7 +578,7 @@
         const amt = state.form.involvedMembers.length > 0 ? Number((targetAmount / state.form.involvedMembers.length).toFixed(2)) : 0;
         state.form.involvedMembers.forEach(m => {
           const el = document.getElementById(`equal-amt-${m}`);
-          if (el) el.innerText = `${prefix}${formatNum(amt)}`; 
+          if (el) el.innerText = `${prefix}${formatCurrency(amt)}`; 
         });
       } else {
         const exactTotal = getExactSplitTotal();
