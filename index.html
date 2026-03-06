@@ -8,8 +8,6 @@
     <!-- 防止搜尋引擎索引此網頁 -->
     <meta name="robots" content="noindex, nofollow">
     
-			 
- 
     <!-- PWA 相關設定 -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff90a0">
@@ -206,10 +204,9 @@
 
         /* 針對不同類別的微調 */
         .card.app .icon-wrapper { background-color: #e3f2fd; color: #2196f3; }
-        .card.trip .icon-wrapper { background-color: #fce4ec; color: #e91e63; }
-        .card.yoga .icon-wrapper { background-color: #fff3e0; color: #ff9800; }
         .card.calc .icon-wrapper { background-color: #e8f5e9; color: #4caf50; }
-        .card.pingpong .icon-wrapper { background-color: #f3e5f5; color: #9c27b0; } /* 紫色測試區風格 */
+        .card.trip .icon-wrapper { background-color: #fce4ec; color: #e91e63; }
+        .card.finance .icon-wrapper { background-color: #e0f2f1; color: #00897b; } /* 記帳工具風格：深青色 */
 
         /* 登入畫面樣式 */
         #login-overlay {
@@ -363,7 +360,7 @@
     <div class="section-title">🗺️ 探索旅程 (Travel & Adventures)</div>
     <div class="container">
 
-        <!-- 卡片 2: 大阪之旅 -->
+        <!-- 卡片 3: 大阪之旅 -->
         <a href="osaka.html" class="card trip" onclick="checkLink(event, 'osaka.html')">
             <div class="icon-wrapper">🌸</div>
             <h2>大阪無牛美食之旅</h2>
@@ -371,31 +368,16 @@
             <span class="status-badge status-ready">準備出發</span>
         </a>
 
-        <!-- 卡片 3: 空中瑜珈 (WIP) -->
-        <a href="#" class="card yoga" onclick="showWIPMessage(event)">
-            <div class="icon-wrapper">🧘‍♀️</div>
-            <h2>空中瑜珈修煉</h2>
-            <p>記錄我的練習進度、掛布技巧與「內扣」改善的成長日記。持續對抗地心引力中。</p>
-            <span class="status-badge status-wip">建置中</span>
+        <!-- 卡片 4: 記帳工具 -->
+        <a href="travel_app.html" class="card finance" onclick="checkLink(event, 'travel_app.html')">
+            <div class="icon-wrapper">💰</div>
+            <h2>旅費記帳本</h2>
+            <p>專為冒險設計的記帳工具。輕鬆記錄每筆開銷，掌握旅途預算。</p>
+            <span class="status-badge status-ready">啟用中</span>
         </a>
 
     </div>
 
-    <!-- 第三區：測試區 -->
-    <div class="section-title">🧪 測試區 (Testing Area)</div>
-    <div class="container">
-
-        <!-- 卡片 4: 桌球報名測試 -->
-        <a href="tabletennis_form.html" class="card pingpong" onclick="checkLink(event, 'tabletennis_form.html')">
-            <div class="icon-wrapper">🏓</div>
-            <h2>桌球報名測試</h2>
-            <p>用於測試桌球報名表單功能與介面流程的實驗性頁面。</p>
-            <span class="status-badge status-wip">測試中</span>
-        </a>
-
-    </div>
-
-							
     <footer>
         &copy; 2026 Crafted with ❤️ for your Adventures.
     </footer>
@@ -474,31 +456,6 @@
                 opacity += 0.05;
             }, 30);
         });
-
-        // 顯示建置中訊息的函式
-        function showWIPMessage(e) {
-            e.preventDefault();
-            const msg = document.createElement('div');
-            msg.style.position = 'fixed';
-            msg.style.top = '50%';
-            msg.style.left = '50%';
-            msg.style.transform = 'translate(-50%, -50%)';
-            msg.style.background = 'rgba(0,0,0,0.85)';
-            msg.style.color = 'white';
-            msg.style.padding = '20px 40px';
-            msg.style.borderRadius = '10px';
-            msg.style.zIndex = '1000';
-            msg.style.textAlign = 'center';
-            msg.innerHTML = '<div style="font-size:2rem;margin-bottom:10px;">🚧</div>頁面努力建置中！<br>內扣練習還沒結束呢！';
-            
-            document.body.appendChild(msg);
-            
-            setTimeout(() => {
-                msg.style.transition = 'opacity 0.5s';
-                msg.style.opacity = '0';
-                setTimeout(() => msg.remove(), 500);
-            }, 2000);
-        }
 
         function checkLink(e, url) {
             console.log(`正在前往: ${url}`);
