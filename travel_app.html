@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>✈️ 旅途記帳本 (純淨雙軌版)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans pb-24 antialiased selection:bg-indigo-200">
+
+  <script>
+    // ⚠️ 貼上您的 Web App URL 與 試算表 URL
+    const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyfgCxMcUYHrzF8-sp8fsN6fq-jUig4Zwh9YNvbZzRTO4LmEX36E72x7QAfEqKpYXFb/exec"; 
+    const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1Ni_tRk6Z5S3lI1tZTfILgT71YrLFle0yxgG8la6t9ac/edit?gid=0#gid=0"; 
+  </script>
+
+  <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
+    <h1 class="text-xl font-bold tracking-wider flex items-center">
+      <i data-lucide="plane-takeoff" class="w-5 h-5 mr-2"></i> 旅途記帳本
+    </h1>
+    <a href="javascript:void(0)" onclick="openSheet()" class="text-xs font-medium bg-indigo-500 hover:bg-indigo-400 px-3 py-1.5 rounded-full flex items-center transition-colors shadow-sm">
+      <i data-lucide="external-link" class="w-3 h-3 mr-1"></i> 看試算表
+    </a>
+  </header>
+
+  <main class="max-w-md mx-auto p-4 space-y-4" id="app-container"></main>
+
+  <nav class="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-[0_-5px_15px_-10px_rgba(0,0,0,0.1)] pb-safe z-40">
+    <div class="max-w-md mx-auto flex justify-between px-2">
+      <button onclick="switchTab('add')" id="nav-add" class="flex-1 flex flex-col items-center py-3 px-1 transition-colors text-indigo-600">
+        <div class="p-1.5 rounded-full mb-1 bg-indigo-100" id="nav-add-icon-bg">
+          <i data-lucide="pen-line" class="w-6 h-6 text-indigo-700"></i>
+        </div>
+        <span class="text-[10px] font-medium">記一筆</span>
+      </button>
+      <button onclick="openSheet()" class="flex-1 flex flex-col items-center py-3 px-1 transition-colors text-slate-400 hover:text-slate-600 active:scale-95">
+        <i data-lucide="external-link" class="w-6 h-6 mb-1 mt-1 text-slate-400"></i>
+        <span class="text-[10px] font-medium mt-0.5">看試算表</span>
+      </button>
+      <button onclick="switchTab('settle')" id="nav-settle" class="flex-1 flex flex-col items-center py-3 px-1 transition-colors text-slate-400 hover:text-slate-600">
+        <i data-lucide="calculator" class="w-6 h-6 mb-1 mt-1 text-slate-400"></i>
+        <span class="text-[10px] font-medium mt-0.5">帳務結算</span>
+      </button>
+    </div>
+  </nav>
+
+  <div id="loading-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center text-white">
+    <i data-lucide="loader-2" class="w-10 h-10 animate-spin mb-4"></i>
+    <p class="font-bold tracking-wider" id="loading-text">處理中...</p>
+  </div>
+
+  <script>
+    let state = {
+      activeTab: 'add',
+      cloudData: { twd: [], foreign: [] }, 
+      members: JSON.parse(localStorage.getItem('travel_members')) || ['小明', '小華', '小美'],
+      form: {
+        mode: 'foreign', // 'foreign' 或是 'twd'
+        title: '', date: new Date().toISOString().split('T')[0], 
+        payMethod: '💳 信用卡', amount: '', payer: '',
+        splitType: 'equal', involvedMembers: [], exactSplits: {}
+      }
+    };
+
+    function initFormState() {
+      if (!state.form.payer && state.members.length > 0) state.form.payer = state.members[0];
+      state.form.involvedMembers = [...state.members];
+      state.members.forEach(m => state.form.exactSplits[m] = '');
+    }
+    initFormState();
+
+    const formatNum = (num) => Number(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const saveMembers = () => localStorage.setItem('travel_members', JSON.stringify(state.members));
+    const openSheet = () => { if(GOOGLE_SHEET_URL) window.open(GOOGLE_SHEET_URL, '_blank'); };
+    function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('loading-overlay').classList.replace('hidden', 'flex'); }
+    function hideLoading() { document.getElementById('loading-overlay').classList.replace('flex', 'hidden'); }
+
+    // API 讀取
+    async function fetchCloudData() {
+      if (!GOOGLE_WEB_APP_URL) return;
+      showLoading("同步 Google 試算表...");
+      try {
+        const response = await fetch(GOOGLE_WEB_APP_URL);
+        const text = await response.text();
+        const result = JSON.parse(text);
+        if (result.status === 'success') {
+          state.cloudData = result.data || { twd: [], foreign: [] };
+        }
+      } catch (error) {
+        alert("網路異常或權限錯誤。");
+      } finally { hideLoading(); renderView(); }
+    }
+
+    function getTargetAmount() { return parseFloat(state.form.amount || 0); }
+    function getExactSplitTotal() { return Object.values(state.form.exactSplits).reduce((sum, val) => sum + (parseFloat(val) || 0), 0); }
+
+    // API 寫入
+    async function submitExpense() {
+      const targetAmount = getTargetAmount();
+      
+      if (!state.form.title) return alert('請輸入消費項目名稱');
+      if (targetAmount <= 0) return alert('請輸入有效的總金額');
+      if (state.form.splitType === 'exact') {
+        const exactTotal = getExactSplitTotal();
+        if (Math.abs(exactTotal - targetAmount) > 1) return alert(`分帳總和 (${exactTotal}) 與總額 (${targetAmount}) 不符！`);
+      } else if (state.form.involvedMembers.length === 0) {
+        return alert('請至少選擇一位參與分攤的成員');
+      }
+
+      const finalSplits = {};
+      if (state.form.splitType === 'equal') {
+        const invCount = state.form.involvedMembers.length;
+        let baseAmount = Number((targetAmount / invCount).toFixed(2));
+        let remainder = Number((targetAmount - (baseAmount * invCount)).toFixed(2));
+        state.form.involvedMembers.forEach((m, index) => {
+          finalSplits[m] = Number((baseAmount + (index === 0 ? remainder : 0)).toFixed(2));
+        });
+      } else {
+        Object.entries(state.form.exactSplits).forEach(([m, amt]) => {
+          if (parseFloat(amt) > 0) finalSplits[m] = parseFloat(amt);
+        });
+      }
+
+      const expenseData = {
+        mode: state.form.mode,
+        title: state.form.title, 
+        date: state.form.date, 
+        payMethod: state.form.mode === 'foreign' ? state.form.payMethod : '國內台幣',
+        amount: targetAmount, 
+        payer: state.form.payer, 
+        splits: finalSplits 
+      };
+
+      showLoading("寫入 Google 試算表...");
+
+      try {
+        await fetch(GOOGLE_WEB_APP_URL, {
+          method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(expenseData)
+        });
+        
+        alert(`✅ 記帳成功！已存入「${state.form.mode === 'foreign' ? '外幣' : '台幣'}分帳」工作表。`);
+        
+        const currentDate = state.form.date;
+        const currentMode = state.form.mode;
+        state.form = {
+          mode: currentMode, title: '', date: currentDate, payMethod: '💳 信用卡', 
+          amount: '', payer: state.members[0], splitType: 'equal', involvedMembers: [...state.members], exactSplits: {}
+        };
+        initFormState();
+        state.cloudData = { twd: [], foreign: [] }; // 強制下次抓取
+        renderView(); window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) { alert('❌ 傳送失敗。'); } 
+      finally { hideLoading(); }
+    }
+
+    // 結算邏輯 (通用)
+    function calculateSettlements(expenses) {
+      const balances = {};
+      state.members.forEach(m => balances[m] = 0);
+
+      expenses.forEach(exp => {
+        if (balances[exp.payer] === undefined) balances[exp.payer] = 0;
+        balances[exp.payer] += exp.amount;
+        if (exp.splits && typeof exp.splits === 'object') {
+          Object.entries(exp.splits).forEach(([person, amount]) => {
+            if (balances[person] === undefined) balances[person] = 0;
+            balances[person] -= amount;
+          });
+        }
+      });
+
+      let debtors = [], creditors = [];
+      Object.entries(balances).forEach(([person, balance]) => {
+        if (balance < -0.01) debtors.push({ person, amount: Math.abs(balance) });
+        else if (balance > 0.01) creditors.push({ person, amount: balance });
+      });
+
+      debtors.sort((a, b) => b.amount - a.amount);
+      creditors.sort((a, b) => b.amount - a.amount);
+
+      const transactions = [];
+      let i = 0, j = 0;
+      while (i < debtors.length && j < creditors.length) {
+        const debtor = debtors[i], creditor = creditors[j];
+        const settleAmount = Math.min(debtor.amount, creditor.amount);
+        transactions.push({ from: debtor.person, to: creditor.person, amount: Number(settleAmount.toFixed(2)) });
+        debtor.amount -= settleAmount; creditor.amount -= settleAmount;
+        if (debtor.amount < 0.01) i++; if (creditor.amount < 0.01) j++;
+      }
+      return { balances, transactions };
+    }
+
+    // 頁籤切換與渲染
+    function switchTab(tab) {
+      state.activeTab = tab;
+      ['add', 'settle'].forEach(t => {
+        const btn = document.getElementById(`nav-${t}`);
+        if (btn) {
+          btn.classList.replace('text-indigo-600', 'text-slate-400');
+          btn.querySelector('svg, i')?.classList.replace('text-indigo-700', 'text-slate-400');
+        }
+      });
+      const activeBtn = document.getElementById(`nav-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.replace('text-slate-400', 'text-indigo-600');
+        activeBtn.querySelector('svg, i')?.classList.replace('text-slate-400', 'text-indigo-700');
+      }
+      document.getElementById('nav-add-icon-bg')?.classList.toggle('bg-indigo-100', tab === 'add');
+
+      if (tab === 'settle' && state.cloudData.twd.length === 0 && state.cloudData.foreign.length === 0) {
+        fetchCloudData();
+      } else { 
+        renderView(); window.scrollTo({ top: 0, behavior: 'smooth' }); 
+      }
+    }
+
+    function renderView() {
+      const container = document.getElementById('app-container');
+      if (state.activeTab === 'add') container.innerHTML = renderAddTab();
+      else if (state.activeTab === 'settle') container.innerHTML = renderSettleTab();
+      lucide.createIcons(); 
+    }
+
+    function generateSettleBlock(title, symbol, color, bgClass, dataArray) {
+      const { balances, transactions } = calculateSettlements(dataArray);
+      return `
+        <div class="mb-8">
+          <div class="flex items-center mb-3">
+            <h3 class="text-lg font-black text-slate-800 flex items-center bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100">
+              <span class="w-8 h-8 rounded-full ${bgClass} flex items-center justify-center mr-3 text-${color}-600">${symbol}</span>
+              ${title}結算
+            </h3>
+          </div>
+          
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-4">
+            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
+              <h4 class="font-bold text-slate-700 text-xs flex items-center">轉帳建議</h4>
+            </div>
+            <div class="p-4 space-y-3">
+              ${transactions.length === 0 ? `<p class="text-slate-400 text-center py-2 text-sm font-medium">無欠款紀錄🎉</p>` 
+              : transactions.map(txn => `
+                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <div class="flex items-center">
+                    <span class="font-black text-slate-700 w-12 text-center">${txn.from}</span>
+                    <div class="flex flex-col items-center mx-2 text-slate-400">
+                      <i data-lucide="arrow-right" class="w-4 h-4 text-${color}-500"></i>
+                    </div>
+                    <span class="font-black text-slate-700 w-12 text-center">${txn.to}</span>
+                  </div>
+                  <span class="font-black text-${color}-700 text-lg tracking-tight">${symbol} ${formatNum(txn.amount)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
+              <h4 class="font-bold text-slate-700 text-xs flex items-center">個人淨資產</h4>
+            </div>
+            <div class="p-0">
+              ${Object.entries(balances).map(([person, balance], idx, arr) => `
+                <div class="flex justify-between items-center p-3.5 ${idx !== arr.length -1 ? 'border-b border-slate-100' : ''}">
+                  <span class="font-bold text-slate-700">${person}</span>
+                  <div class="text-right">
+                    ${balance > 0.01 ? `<span class="text-emerald-700 font-black bg-emerald-50 px-2 py-1 rounded text-sm border border-emerald-100">應收 ${formatNum(balance)}</span>`
+                    : balance < -0.01 ? `<span class="text-rose-600 font-black bg-rose-50 px-2 py-1 rounded text-sm border border-rose-100">應付 ${formatNum(Math.abs(balance))}</span>`
+                    : `<span class="text-slate-400 font-bold text-sm bg-slate-50 px-2 py-1 rounded border border-slate-100">已結清</span>`}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSettleTab() {
+      return `
+        <div class="animate-in fade-in slide-in-from-bottom-4 duration-300 pb-6">
+          <div class="flex justify-between items-center mb-5 px-1">
+            <h2 class="text-xl font-black text-slate-800 flex items-center">
+              <i data-lucide="calculator" class="w-6 h-6 mr-2 text-indigo-600"></i> 帳務結算中心
+            </h2>
+             <button onclick="fetchCloudData()" class="text-sm font-bold text-indigo-600 bg-indigo-100 px-3 py-1.5 rounded-full flex items-center hover:bg-indigo-200 transition-colors shadow-sm">
+              <i data-lucide="refresh-cw" class="w-4 h-4 mr-1"></i> 重新同步
+            </button>
+          </div>
+
+          ${generateSettleBlock("外幣", "¥", "indigo", "bg-indigo-100", state.cloudData.foreign)}
+          ${generateSettleBlock("台幣", "$", "emerald", "bg-emerald-100", state.cloudData.twd)}
+          
+        </div>
+      `;
+    }
+
+    function renderAddTab() {
+      const mode = state.form.mode;
+      const sType = state.form.splitType;
+      const targetAmount = getTargetAmount();
+      const prefix = mode === 'foreign' ? '外幣 ' : 'NT$ ';
+      
+      let splitHtml = '';
+      if (sType === 'equal') {
+         const amt = state.form.involvedMembers.length > 0 ? Number((targetAmount / state.form.involvedMembers.length).toFixed(2)) : 0;
+         splitHtml = `
+           <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+             <div class="space-y-2">
+               ${state.members.map(m => {
+                 const isChecked = state.form.involvedMembers.includes(m);
+                 return `
+                 <label class="flex items-center p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-300 transition-colors">
+                   <input type="checkbox" onchange="toggleInvolvedMember('${m}')" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 mr-3" />
+                   <span class="text-sm font-bold text-slate-700 flex-1">${m}</span>
+                   ${isChecked ? `<span id="equal-amt-${m}" class="text-sm ${mode==='foreign'?'text-indigo-600':'text-emerald-600'} font-black">${prefix}${formatNum(amt)}</span>` : ''}
+                 </label>
+               `}).join('')}
+             </div>
+           </div>
+         `;
+      } else {
+         const exactTotal = getExactSplitTotal();
+         const isBalanced = Math.abs(exactTotal - targetAmount) <= 1;
+         splitHtml = `
+           <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+             <div class="flex justify-between items-center mb-2">
+               <span class="text-xs text-slate-500 font-bold">輸入每人金額</span>
+               <span id="exact-total-display" class="text-xs font-bold ${isBalanced ? 'text-green-600' : 'text-red-500 bg-red-50 px-2 py-0.5 rounded'}">已分配: ${exactTotal} / ${targetAmount}</span>
+             </div>
+             <div class="space-y-2">
+               ${state.members.map(m => `
+                 <div class="flex items-center p-2 bg-white rounded-lg border border-slate-200 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400 transition-all">
+                   <span class="text-sm font-bold text-slate-700 w-16">${m}</span>
+                   <div class="flex-1 relative">
+                     <span class="absolute left-3 top-2 text-slate-400 text-sm font-medium">${mode==='foreign'?'¥':'$'}</span>
+                     <input type="number" oninput="updateExactSplit('${m}', this.value)" value="${state.form.exactSplits[m] || ''}" class="w-full pl-7 p-1.5 border-none bg-transparent text-sm font-bold outline-none" placeholder="0" />
+                   </div>
+                 </div>
+               `).join('')}
+             </div>
+           </div>
+         `;
+      }
+
+      return `
+        <div class="animate-in fade-in slide-in-from-bottom-4 duration-300 pb-6 space-y-4">
+          
+          <!-- 大架構模式切換 -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2 flex gap-2">
+            <button onclick="updateForm('mode', 'foreign')" class="flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center ${mode === 'foreign' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
+              <i data-lucide="globe" class="w-4 h-4 mr-1.5"></i> 外幣分帳模式
+            </button>
+            <button onclick="updateForm('mode', 'twd')" class="flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center ${mode === 'twd' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
+              <i data-lucide="home" class="w-4 h-4 mr-1.5"></i> 台幣分帳模式
+            </button>
+          </div>
+
+          <!-- 成員區塊 -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div class="flex justify-between items-center mb-3">
+              <h2 class="text-sm font-bold text-slate-700 flex items-center">
+                <i data-lucide="users" class="w-4 h-4 mr-1.5 text-indigo-600"></i> 旅程成員
+              </h2>
+              <button onclick="toggleAddMemberInput()" class="inline-flex items-center justify-center bg-white border border-dashed border-slate-300 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 text-xs font-bold px-3 py-1 rounded-full transition-colors focus:outline-none">
+                <i data-lucide="plus" class="w-3 h-3 mr-1"></i> 新增
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-2">
+              ${state.members.map(m => `
+                <span class="inline-flex items-center bg-slate-100 text-slate-700 text-sm font-medium px-2.5 py-1 rounded-full border border-slate-200">
+                  ${m} <button onclick="removeMember('${m}')" class="ml-1.5 text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </span>
+              `).join('')}
+            </div>
+            <div id="addMemberContainer" class="hidden gap-2 mt-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+              <input id="newMemberInput" type="text" placeholder="輸入名稱..." class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500" onkeypress="if(event.key === 'Enter') addMember()" />
+              <button onclick="addMember()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-indigo-700 transition">確定</button>
+            </div>
+          </div>
+
+          <!-- 核心表單 -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4 border-t-4 ${mode === 'foreign' ? 'border-t-indigo-500' : 'border-t-emerald-500'}">
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div class="col-span-2">
+                <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">消費項目</label>
+                <input type="text" value="${state.form.title}" placeholder="例：敘敘苑燒肉" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-medium" oninput="updateForm('title', this.value)" />
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">日期</label>
+                <input type="date" value="${state.form.date}" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none font-medium text-sm" onchange="updateForm('date', this.value)" />
+              </div>
+              
+              ${mode === 'foreign' ? `
+                <div class="col-span-2">
+                  <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">支付方式</label>
+                  <div class="flex gap-2">
+                    <button onclick="updateForm('payMethod', '💳 信用卡')" class="flex-1 py-2 rounded-lg border transition-all ${state.form.payMethod === '💳 信用卡' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'border-slate-200 text-slate-500 font-medium'}">💳 信用卡</button>
+                    <button onclick="updateForm('payMethod', '💵 現金')" class="flex-1 py-2 rounded-lg border transition-all ${state.form.payMethod === '💵 現金' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'border-slate-200 text-slate-500 font-medium'}">💵 現金</button>
+                  </div>
+                </div>
+              ` : ''}
+              
+              <div class="col-span-2 mt-2">
+                <label class="block text-xs font-black ${mode === 'foreign' ? 'text-indigo-600' : 'text-emerald-600'} mb-1 text-lg">
+                  ${mode === 'foreign' ? '輸入外幣總額' : '輸入台幣總額'}
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-slate-400 font-bold">${mode === 'foreign' ? '¥' : '$'}</span>
+                  <input type="number" oninput="updateForm('amount', this.value)" value="${state.form.amount}" placeholder="0" class="w-full pl-8 p-3 border border-slate-300 rounded-xl bg-slate-50 font-black text-2xl outline-none focus:ring-2 ${mode === 'foreign' ? 'focus:ring-indigo-500 text-indigo-700' : 'focus:ring-emerald-500 text-emerald-700'}" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分帳區塊 -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div class="mb-5">
+              <label class="block text-sm font-bold text-slate-700 mb-2">誰先付的錢？ (代墊人)</label>
+              <div class="flex flex-wrap gap-2">
+                ${state.members.map(m => `
+                  <button onclick="updateForm('payer', '${m}')" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-colors border ${state.form.payer === m ? (mode==='foreign'?'bg-indigo-600 border-indigo-600':'bg-emerald-600 border-emerald-600') + ' text-white shadow-sm' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'}">${m}</button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-sm font-bold text-slate-700">這筆錢怎麼分？</label>
+                <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
+                  <button onclick="updateForm('splitType', 'equal')" class="px-3 py-1 text-xs font-bold rounded-md ${state.form.splitType === 'equal' ? 'bg-white text-slate-700 shadow-sm border border-slate-200' : 'text-slate-500'}">大家平分</button>
+                  <button onclick="updateForm('splitType', 'exact')" class="px-3 py-1 text-xs font-bold rounded-md ${state.form.splitType === 'exact' ? 'bg-white text-slate-700 shadow-sm border border-slate-200' : 'text-slate-500'}">精確輸入</button>
+                </div>
+              </div>
+              ${splitHtml}
+            </div>
+          </div>
+
+          <button onclick="submitExpense()" class="w-full mt-2 text-white font-black text-lg py-4 px-4 rounded-xl shadow-lg active:transform active:scale-95 transition-all flex justify-center items-center ${mode === 'foreign' ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'}">
+            <i data-lucide="cloud-upload" class="w-5 h-5 mr-2"></i> 寫入${mode === 'foreign' ? '外幣' : '台幣'}分帳表
+          </button>
+        </div>
+      `;
+    }
+
+    // --- 局部更新交互 ---
+    function toggleAddMemberInput() {
+      const c = document.getElementById('addMemberContainer');
+      const i = document.getElementById('newMemberInput');
+      if (c.classList.contains('hidden')) { c.classList.replace('hidden', 'flex'); i.focus(); } 
+      else { c.classList.replace('flex', 'hidden'); }
+    }
+    function addMember() {
+      const val = document.getElementById('newMemberInput').value.trim();
+      if(val && !state.members.includes(val)) {
+        state.members.push(val); state.form.involvedMembers.push(val); state.form.exactSplits[val] = '';
+        saveMembers(); renderView();
+      }
+    }
+    function removeMember(member) {
+      if(confirm(`確定移除 ${member}？`)) {
+        state.members = state.members.filter(m => m !== member);
+        state.form.involvedMembers = state.form.involvedMembers.filter(m => m !== member);
+        if(state.form.payer === member) state.form.payer = state.members[0];
+        saveMembers(); renderView();
+      }
+    }
+    function toggleInvolvedMember(member) {
+      if(state.form.involvedMembers.includes(member)) state.form.involvedMembers = state.form.involvedMembers.filter(m => m !== member);
+      else state.form.involvedMembers.push(member);
+      renderView();
+    }
+    function updateForm(field, value) {
+      state.form[field] = value;
+      if (['mode', 'payMethod', 'splitType', 'payer'].includes(field)) renderView();
+      else updateCalculationsUI();
+    }
+
+    function updateCalculationsUI() {
+      const targetAmount = getTargetAmount();
+      const prefix = state.form.mode === 'foreign' ? '外幣 ' : 'NT$ ';
+
+      if (state.form.splitType === 'equal') {
+        const amt = state.form.involvedMembers.length > 0 ? Number((targetAmount / state.form.involvedMembers.length).toFixed(2)) : 0;
+        state.form.involvedMembers.forEach(m => {
+          const el = document.getElementById(`equal-amt-${m}`);
+          if (el) el.innerText = `${prefix}${formatNum(amt)}`; 
+        });
+      } else {
+        const exactTotal = getExactSplitTotal();
+        const totalDisplay = document.getElementById('exact-total-display');
+        if (totalDisplay) {
+          totalDisplay.innerText = `已分配: ${exactTotal} / ${targetAmount}`;
+          totalDisplay.className = Math.abs(exactTotal - targetAmount) <= 1 ? 'text-xs font-bold text-green-600' : 'text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded';
+        }
+      }
+    }
+
+    function updateExactSplit(member, value) {
+      state.form.exactSplits[member] = value;
+      updateCalculationsUI(); 
+    }
+
+    renderView();
+  </script>
+</body>
+</html>
