@@ -76,7 +76,6 @@
     }
     initFormState();
 
-    // 修復: 統一名稱為 formatCurrency 避免 ReferenceError 崩潰
     const formatCurrency = (amount) => Number(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     
     const saveMembers = () => localStorage.setItem('travel_members', JSON.stringify(state.members));
@@ -146,12 +145,16 @@
         });
       }
 
+      // 判斷支付方式：外幣模式 或 外幣已出帳模式 採用表單選擇的 payMethod，純台幣則預設國內台幣
+      const calculatedPayMethod = state.form.mode === 'foreign' ? state.form.payMethod : 
+                                  (state.form.twdSubType === 'billed' ? state.form.payMethod : '國內台幣');
+
       const expenseData = {
         mode: state.form.mode,
         twdSubType: state.form.twdSubType,
         title: state.form.title, 
         date: state.form.date, 
-        payMethod: state.form.mode === 'foreign' ? state.form.payMethod : '國內台幣',
+        payMethod: calculatedPayMethod,
         amount: targetAmount, 
         payer: state.form.payer, 
         splits: finalSplits,
@@ -227,7 +230,6 @@
     function switchTab(tab) {
       state.activeTab = tab;
       
-      // 修復: 放棄使用 replace() 改用 remove() & add() 確保強健性
       ['add', 'settle'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (btn) {
@@ -473,6 +475,13 @@
                 </div>
               ` : `
                 <!-- 外幣已出帳專屬輸入區塊 -->
+                <div class="col-span-2">
+                  <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">支付方式</label>
+                  <div class="flex gap-2">
+                    <button onclick="updateForm('payMethod', '💳 信用卡')" class="flex-1 py-2 rounded-lg border transition-all ${state.form.payMethod === '💳 信用卡' ? 'bg-emerald-50 border-emerald-500 text-emerald-700 font-bold' : 'border-slate-200 text-slate-500 font-medium'}">💳 信用卡</button>
+                    <button onclick="updateForm('payMethod', '💵 現金')" class="flex-1 py-2 rounded-lg border transition-all ${state.form.payMethod === '💵 現金' ? 'bg-emerald-50 border-emerald-500 text-emerald-700 font-bold' : 'border-slate-200 text-slate-500 font-medium'}">💵 現金</button>
+                  </div>
+                </div>
                 <div class="col-span-2 sm:col-span-1 mt-2">
                   <label class="block text-xs font-bold text-slate-500 mb-1">💴 原外幣金額</label>
                   <input type="number" oninput="updateForm('foreignAmount', this.value)" value="${state.form.foreignAmount}" placeholder="例: 5000" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
