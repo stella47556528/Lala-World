@@ -84,13 +84,25 @@
     function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('loading-overlay').classList.replace('hidden', 'flex'); }
     function hideLoading() { document.getElementById('loading-overlay').classList.replace('flex', 'hidden'); }
 
-    // API 讀取
+    // API 讀取 (修復截斷錯誤)
     async function fetchCloudData() {
       if (!GOOGLE_WEB_APP_URL) return;
       showLoading("同步 Google 試算表...");
       try {
         const response = await fetch(GOOGLE_WEB_APP_URL);
         const text = await response.text();
+        const result = JSON.parse(text);
+        if (result.status === 'success') {
+          state.cloudData = result.data || { twd: [], foreign: [] };
+        }
+      } catch (error) {
+        alert("網路異常或權限錯誤。");
+      } finally { 
+        hideLoading(); 
+        renderView(); 
+      }
+    }
+
     // 動態判斷當前模式下的分帳母數
     function getTargetAmount() { 
       if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
@@ -100,7 +112,7 @@
     }
     function getExactSplitTotal() { return Object.values(state.form.exactSplits).reduce((sum, val) => sum + (parseFloat(val) || 0), 0); }
 
-    // 取得當前換算匯率 (修正為：純匯率，不含手續費)
+    // 取得當前換算匯率 (純匯率，不含手續費)
     function getExchangeRate() {
       if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
         const twd = parseFloat(state.form.twdAmount || 0); // 使用純台幣本金計算
@@ -110,7 +122,7 @@
       return '';
     }
 
-    // 新增：取得手續費百分比
+    // 取得手續費百分比
     function getFeePercentage() {
       if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
         const twd = parseFloat(state.form.twdAmount || 0);
@@ -120,7 +132,7 @@
       return '';
     }
 
-    // 新增：取得 UI 顯示用的匯率與手續費字串
+    // 取得 UI 顯示用的匯率與手續費字串
     function getRateDisplayText() {
       const rate = getExchangeRate();
       const feePct = getFeePercentage();
@@ -132,7 +144,7 @@
       return '(填寫金額以計算匯率)';
     }
 
-    // API 寫入
+    // API 寫入 (修復截斷錯誤)
     async function submitExpense() {
       const targetAmount = getTargetAmount();
       
@@ -181,6 +193,8 @@
         Object.entries(state.form.exactSplits).forEach(([m, amt]) => {
           if (parseFloat(amt) > 0) finalSplits[m] = parseFloat(amt);
         });
+      } // <--- 修復點：這個括號原本遺失了
+
       // 判斷支付方式：外幣模式 或 外幣已出帳模式 採用表單選擇的 payMethod，純台幣則預設國內台幣
       const calculatedPayMethod = state.form.mode === 'foreign' ? state.form.payMethod : 
                                   (state.form.twdSubType === 'billed' ? state.form.payMethod : '國內台幣');
