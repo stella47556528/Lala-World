@@ -61,11 +61,12 @@
       cloudData: { twd: [], foreign: [] }, 
       members: JSON.parse(localStorage.getItem('travel_members')) || ['小明', '小華', '小美'],
       form: {
-        mode: 'foreign', // 'foreign' 或是 'twd'
-        twdSubType: 'pure', // 'pure' (純台幣) 或是 'billed' (外幣已出帳)
+        mode: 'foreign', 
+        twdSubType: 'pure', 
         title: '', date: new Date().toISOString().split('T')[0], 
         payMethod: '💳 信用卡', amount: '', foreignAmount: '', twdAmount: '', feeAmount: '', payer: '',
-        splitType: 'equal', involvedMembers: [], exactSplits: {}
+        splitType: 'equal', // 'equal', 'exact', or 'exact_foreign'
+        involvedMembers: [], exactSplits: {}
       }
     };
 
@@ -90,15 +91,6 @@
       try {
         const response = await fetch(GOOGLE_WEB_APP_URL);
         const text = await response.text();
-        const result = JSON.parse(text);
-        if (result.status === 'success') {
-          state.cloudData = result.data || { twd: [], foreign: [] };
-        }
-      } catch (error) {
-        alert("網路異常或權限錯誤。");
-      } finally { hideLoading(); renderView(); }
-    }
-
     // 動態判斷當前模式下的分帳母數
     function getTargetAmount() { 
       if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
@@ -108,14 +100,36 @@
     }
     function getExactSplitTotal() { return Object.values(state.form.exactSplits).reduce((sum, val) => sum + (parseFloat(val) || 0), 0); }
 
-    // 取得當前換算匯率 (供顯示與儲存用)
+    // 取得當前換算匯率 (修正為：純匯率，不含手續費)
     function getExchangeRate() {
       if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
-        const total = getTargetAmount();
+        const twd = parseFloat(state.form.twdAmount || 0); // 使用純台幣本金計算
         const fAmount = parseFloat(state.form.foreignAmount || 0);
-        if (total > 0 && fAmount > 0) return (total / fAmount).toFixed(4);
+        if (twd > 0 && fAmount > 0) return (twd / fAmount).toFixed(4);
       }
       return '';
+    }
+
+    // 新增：取得手續費百分比
+    function getFeePercentage() {
+      if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
+        const twd = parseFloat(state.form.twdAmount || 0);
+        const fee = parseFloat(state.form.feeAmount || 0);
+        if (twd > 0 && fee > 0) return ((fee / twd) * 100).toFixed(2);
+      }
+      return '';
+    }
+
+    // 新增：取得 UI 顯示用的匯率與手續費字串
+    function getRateDisplayText() {
+      const rate = getExchangeRate();
+      const feePct = getFeePercentage();
+      if (rate) {
+         let text = `(純匯率: ${rate}`;
+         if (feePct) text += ` | 手續費率: ${feePct}%`;
+         return text + `)`;
+      }
+      return '(填寫金額以計算匯率)';
     }
 
     // API 寫入
@@ -124,13 +138,20 @@
       
       if (!state.form.title) return alert('請輸入消費項目名稱');
       if (targetAmount <= 0) return alert('請輸入有效的總金額');
+      
+      // 驗證分帳資料
       if (state.form.splitType === 'exact') {
         const exactTotal = getExactSplitTotal();
-        if (Math.abs(exactTotal - targetAmount) > 1) return alert(`分帳總和 (${exactTotal}) 與總額 (${targetAmount}) 不符！`);
+        if (Math.abs(exactTotal - targetAmount) > 1) return alert(`台幣分帳總和 (${exactTotal}) 與台幣總成本 (${targetAmount}) 不符！`);
+      } else if (state.form.splitType === 'exact_foreign') {
+        const exactForeignTotal = getExactSplitTotal();
+        const fTotal = parseFloat(state.form.foreignAmount || 0);
+        if (Math.abs(exactForeignTotal - fTotal) > 0.1) return alert(`外幣分帳總和 (${exactForeignTotal}) 與外幣總額 (${fTotal}) 不符！`);
       } else if (state.form.involvedMembers.length === 0) {
         return alert('請至少選擇一位參與分攤的成員');
       }
 
+      // 計算最終分帳結果 (轉為台幣)
       const finalSplits = {};
       if (state.form.splitType === 'equal') {
         const invCount = state.form.involvedMembers.length;
@@ -139,12 +160,27 @@
         state.form.involvedMembers.forEach((m, index) => {
           finalSplits[m] = Number((baseAmount + (index === 0 ? remainder : 0)).toFixed(2));
         });
+      } else if (state.form.splitType === 'exact_foreign') {
+        const fTotal = parseFloat(state.form.foreignAmount || 0);
+        let currentTwdSum = 0;
+        const membersWithAmt = Object.keys(state.form.exactSplits).filter(m => parseFloat(state.form.exactSplits[m]) > 0);
+        
+        membersWithAmt.forEach((m, index) => {
+          const pForeign = parseFloat(state.form.exactSplits[m]);
+          if (index === membersWithAmt.length - 1) {
+            // 最後一個人吸收除不盡的微小誤差
+            finalSplits[m] = Number((targetAmount - currentTwdSum).toFixed(2));
+          } else {
+            const twdShare = Number(((pForeign / fTotal) * targetAmount).toFixed(2));
+            finalSplits[m] = twdShare;
+            currentTwdSum += twdShare;
+          }
+        });
       } else {
+        // exact (台幣)
         Object.entries(state.form.exactSplits).forEach(([m, amt]) => {
           if (parseFloat(amt) > 0) finalSplits[m] = parseFloat(amt);
         });
-      }
-
       // 判斷支付方式：外幣模式 或 外幣已出帳模式 採用表單選擇的 payMethod，純台幣則預設國內台幣
       const calculatedPayMethod = state.form.mode === 'foreign' ? state.form.payMethod : 
                                   (state.form.twdSubType === 'billed' ? state.form.payMethod : '國內台幣');
@@ -161,7 +197,8 @@
         // 外幣已出帳的附加資料
         foreignAmount: state.form.foreignAmount,
         feeAmount: state.form.feeAmount,
-        exchangeRate: getExchangeRate()
+        // 將純匯率與手續費百分比合併記錄到試算表
+        exchangeRate: getExchangeRate() ? `${getExchangeRate()}${getFeePercentage() ? ` (手續費 ${getFeePercentage()}%)` : ''}` : ''
       };
 
       showLoading("寫入 Google 試算表...");
@@ -183,13 +220,13 @@
           splitType: 'equal', involvedMembers: [...state.members], exactSplits: {}
         };
         initFormState();
-        state.cloudData = { twd: [], foreign: [] }; // 強制下次抓取
+        state.cloudData = { twd: [], foreign: [] }; 
         renderView(); window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) { alert('❌ 傳送失敗。'); } 
       finally { hideLoading(); }
     }
 
-    // 結算邏輯 (通用)
+    // 結算邏輯
     function calculateSettlements(expenses) {
       const balances = {};
       state.members.forEach(m => balances[m] = 0);
@@ -226,45 +263,32 @@
       return { balances, transactions };
     }
 
-    // 頁籤切換與渲染
     function switchTab(tab) {
       state.activeTab = tab;
-      
       ['add', 'settle'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (btn) {
           btn.classList.remove('text-indigo-600');
           btn.classList.add('text-slate-400');
           const icon = btn.querySelector('svg, i');
-          if (icon) {
-            icon.classList.remove('text-indigo-700');
-            icon.classList.add('text-slate-400');
-          }
+          if (icon) { icon.classList.remove('text-indigo-700'); icon.classList.add('text-slate-400'); }
         }
       });
-      
       const activeBtn = document.getElementById(`nav-${tab}`);
       if (activeBtn) {
         activeBtn.classList.remove('text-slate-400');
         activeBtn.classList.add('text-indigo-600');
         const activeIcon = activeBtn.querySelector('svg, i');
-        if (activeIcon) {
-          activeIcon.classList.remove('text-slate-400');
-          activeIcon.classList.add('text-indigo-700');
-        }
+        if (activeIcon) { activeIcon.classList.remove('text-slate-400'); activeIcon.classList.add('text-indigo-700'); }
       }
-      
       const addBg = document.getElementById('nav-add-icon-bg');
       if (addBg) {
-        if (tab === 'add') addBg.classList.add('bg-indigo-100');
-        else addBg.classList.remove('bg-indigo-100');
+        if (tab === 'add') addBg.classList.add('bg-indigo-100'); else addBg.classList.remove('bg-indigo-100');
       }
 
       if (tab === 'settle' && state.cloudData.twd.length === 0 && state.cloudData.foreign.length === 0) {
         fetchCloudData();
-      } else { 
-        renderView(); window.scrollTo({ top: 0, behavior: 'smooth' }); 
-      }
+      } else { renderView(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     }
 
     function renderView() {
@@ -284,7 +308,6 @@
               ${title}結算
             </h3>
           </div>
-          
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-4">
             <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
               <h4 class="font-bold text-slate-700 text-xs flex items-center">轉帳建議</h4>
@@ -305,7 +328,6 @@
               `).join('')}
             </div>
           </div>
-
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
               <h4 class="font-bold text-slate-700 text-xs flex items-center">個人淨資產</h4>
@@ -338,10 +360,8 @@
               <i data-lucide="refresh-cw" class="w-4 h-4 mr-1"></i> 重新同步
             </button>
           </div>
-
           ${generateSettleBlock("外幣", "¥", "indigo", "bg-indigo-100", state.cloudData.foreign)}
           ${generateSettleBlock("台幣", "$", "emerald", "bg-emerald-100", state.cloudData.twd)}
-          
         </div>
       `;
     }
@@ -370,7 +390,35 @@
              </div>
            </div>
          `;
+      } else if (sType === 'exact_foreign') {
+         const exactTotal = getExactSplitTotal();
+         const fTotal = parseFloat(state.form.foreignAmount || 0);
+         const isBalanced = Math.abs(exactTotal - fTotal) <= 0.1;
+         splitHtml = `
+           <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+             <div class="flex justify-between items-center mb-2">
+               <span class="text-xs text-slate-500 font-bold">輸入每人外幣 (自動按比例算台幣)</span>
+               <span id="exact-foreign-display" class="text-xs font-bold ${isBalanced ? 'text-green-600' : 'text-red-500 bg-red-50 px-2 py-0.5 rounded'}">已分配: ${exactTotal} / ${fTotal}</span>
+             </div>
+             <div class="space-y-2">
+               ${state.members.map(m => `
+                 <div class="flex items-center p-2 bg-white rounded-lg border border-slate-200 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition-all">
+                   <span class="text-sm font-bold text-slate-700 w-14">${m}</span>
+                   <div class="flex-1 relative border-r border-slate-100 mr-2 pr-2">
+                     <span class="absolute left-1 top-2 text-slate-400 text-sm font-medium">¥</span>
+                     <input type="number" oninput="updateExactSplit('${m}', this.value)" value="${state.form.exactSplits[m] || ''}" class="w-full pl-5 py-1.5 border-none bg-transparent text-sm font-bold outline-none" placeholder="0" />
+                   </div>
+                   <div class="w-24 text-right">
+                     <span class="text-[10px] text-slate-400 block leading-none mb-1">台幣成本</span>
+                     <span id="exact-foreign-twd-${m}" class="text-sm font-black text-emerald-600 leading-none">NT$ 0</span>
+                   </div>
+                 </div>
+               `).join('')}
+             </div>
+           </div>
+         `;
       } else {
+         // exact (台幣/外幣)
          const exactTotal = getExactSplitTotal();
          const isBalanced = Math.abs(exactTotal - targetAmount) <= 1;
          splitHtml = `
@@ -396,14 +444,13 @@
 
       return `
         <div class="animate-in fade-in slide-in-from-bottom-4 duration-300 pb-6 space-y-4">
-          
           <!-- 大架構模式切換 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2 flex gap-2">
             <button onclick="updateForm('mode', 'foreign')" class="flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center ${mode === 'foreign' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
-              <i data-lucide="globe" class="w-4 h-4 mr-1.5"></i> 記外幣 (免算匯率)
+              <i data-lucide="globe" class="w-4 h-4 mr-1.5"></i> 純外幣模式
             </button>
             <button onclick="updateForm('mode', 'twd')" class="flex-1 py-3 text-sm font-black rounded-xl transition-all flex items-center justify-center ${mode === 'twd' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
-              <i data-lucide="home" class="w-4 h-4 mr-1.5"></i> 記台幣 (含已出帳)
+              <i data-lucide="home" class="w-4 h-4 mr-1.5"></i> 台幣模式 (含已出帳)
             </button>
           </div>
 
@@ -432,7 +479,6 @@
 
           <!-- 核心表單 -->
           <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4 border-t-4 ${mode === 'foreign' ? 'border-t-indigo-500' : 'border-t-emerald-500'}">
-            
             ${mode === 'twd' ? `
               <div class="flex bg-emerald-50 rounded-lg p-1 border border-emerald-100 mb-2">
                 <button onclick="updateForm('twdSubType', 'pure')" class="flex-1 py-1.5 text-sm font-bold rounded-md transition-all ${state.form.twdSubType === 'pure' ? 'bg-white text-emerald-700 shadow-sm border border-emerald-200' : 'text-emerald-500 hover:text-emerald-700'}">🇹🇼 純台幣消費</button>
@@ -474,7 +520,6 @@
                   </div>
                 </div>
               ` : `
-                <!-- 外幣已出帳專屬輸入區塊 -->
                 <div class="col-span-2">
                   <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">支付方式</label>
                   <div class="flex gap-2">
@@ -484,11 +529,11 @@
                 </div>
                 <div class="col-span-2 sm:col-span-1 mt-2">
                   <label class="block text-xs font-bold text-slate-500 mb-1">💴 原外幣金額</label>
-                  <input type="number" oninput="updateForm('foreignAmount', this.value)" value="${state.form.foreignAmount}" placeholder="例: 5000" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                  <input type="number" oninput="updateForm('foreignAmount', this.value)" value="${state.form.foreignAmount}" placeholder="例: 10000" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
                 </div>
                 <div class="col-span-2 sm:col-span-1 mt-2">
                   <label class="block text-xs font-bold text-slate-500 mb-1">🇹🇼 實際扣款台幣</label>
-                  <input type="number" oninput="updateForm('twdAmount', this.value)" value="${state.form.twdAmount}" placeholder="例: 1050" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-bold text-emerald-700" />
+                  <input type="number" oninput="updateForm('twdAmount', this.value)" value="${state.form.twdAmount}" placeholder="例: 2200" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-bold text-emerald-700" />
                 </div>
                 <div class="col-span-2 mb-2">
                   <label class="block text-xs font-bold text-slate-500 mb-1">🏦 海外刷卡手續費 (台幣)</label>
@@ -497,7 +542,7 @@
                 <div class="col-span-2 pt-3 border-t border-slate-100 flex justify-between items-end bg-emerald-50 p-3 rounded-lg border border-emerald-100">
                   <div>
                     <span class="block text-sm font-bold text-slate-600 mb-1">本筆台幣總成本 (含手續費)</span>
-                    <span class="text-xs text-slate-400 font-bold" id="display-rate">${getExchangeRate() ? `(結匯匯率: ${getExchangeRate()})` : '(填寫金額以計算匯率)'}</span>
+                    <span class="text-xs text-slate-400 font-bold" id="display-rate">${getRateDisplayText()}</span>
                   </div>
                   <span class="text-2xl font-black text-emerald-600 tracking-tight" id="display-total">${formatCurrency(getTargetAmount())}</span>
                 </div>
@@ -519,9 +564,12 @@
             <div>
               <div class="flex justify-between items-center mb-2">
                 <label class="block text-sm font-bold text-slate-700">這筆錢怎麼分？</label>
-                <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
-                  <button onclick="updateForm('splitType', 'equal')" class="px-3 py-1 text-xs font-bold rounded-md ${state.form.splitType === 'equal' ? 'bg-white text-slate-700 shadow-sm border border-slate-200' : 'text-slate-500'}">大家平分</button>
-                  <button onclick="updateForm('splitType', 'exact')" class="px-3 py-1 text-xs font-bold rounded-md ${state.form.splitType === 'exact' ? 'bg-white text-slate-700 shadow-sm border border-slate-200' : 'text-slate-500'}">精確輸入</button>
+                <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200 w-full overflow-x-auto no-scrollbar">
+                  <button onclick="updateForm('splitType', 'equal')" class="flex-1 whitespace-nowrap px-2 py-1.5 text-xs font-bold rounded-md ${state.form.splitType === 'equal' ? 'bg-white text-slate-700 shadow-sm border border-slate-200' : 'text-slate-500'}">大家平分</button>
+                  <button onclick="updateForm('splitType', 'exact')" class="flex-1 whitespace-nowrap px-2 py-1.5 text-xs font-bold rounded-md ${state.form.splitType === 'exact' ? 'bg-white text-slate-700 shadow-sm border border-slate-200' : 'text-slate-500'}">精確(${mode === 'foreign' ? '外幣' : '台幣'})</button>
+                  ${mode === 'twd' && state.form.twdSubType === 'billed' ? `
+                    <button onclick="updateForm('splitType', 'exact_foreign')" class="flex-1 whitespace-nowrap px-2 py-1.5 text-xs font-bold rounded-md ${state.form.splitType === 'exact_foreign' ? 'bg-white text-emerald-700 shadow-sm border border-emerald-200' : 'text-slate-500'}">精確(外幣)</button>
+                  ` : ''}
                 </div>
               </div>
               ${splitHtml}
@@ -564,6 +612,8 @@
     }
     function updateForm(field, value) {
       state.form[field] = value;
+      // 切換模式時自動重置為平分，避免邏輯錯亂
+      if (field === 'mode' || field === 'twdSubType') { state.form.splitType = 'equal'; }
       if (['mode', 'twdSubType', 'payMethod', 'splitType', 'payer'].includes(field)) renderView();
       else updateCalculationsUI();
     }
@@ -578,8 +628,7 @@
          const displayRate = document.getElementById('display-rate');
          if (displayTotal) displayTotal.innerText = formatCurrency(targetAmount);
          if (displayRate) {
-           const rate = getExchangeRate();
-           displayRate.innerText = rate ? `(結匯匯率: ${rate})` : '(填寫金額以計算匯率)';
+           displayRate.innerText = getRateDisplayText();
          }
       }
 
@@ -588,6 +637,23 @@
         state.form.involvedMembers.forEach(m => {
           const el = document.getElementById(`equal-amt-${m}`);
           if (el) el.innerText = `${prefix}${formatCurrency(amt)}`; 
+        });
+      } else if (state.form.splitType === 'exact_foreign') {
+        const exactForeignTotal = getExactSplitTotal();
+        const fTotal = parseFloat(state.form.foreignAmount || 0);
+        const totalDisplay = document.getElementById('exact-foreign-display');
+        if (totalDisplay) {
+          totalDisplay.innerText = `已分配: ${exactForeignTotal} / ${fTotal}`;
+          totalDisplay.className = Math.abs(exactForeignTotal - fTotal) <= 0.1 ? 'text-xs font-bold text-green-600' : 'text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded';
+        }
+        state.members.forEach(m => {
+          const el = document.getElementById(`exact-foreign-twd-${m}`);
+          if (el) {
+            const pForeign = parseFloat(state.form.exactSplits[m] || 0);
+            let pTwd = 0;
+            if (fTotal > 0 && pForeign > 0) pTwd = (pForeign / fTotal) * targetAmount;
+            el.innerText = `NT$ ${formatCurrency(pTwd)}`;
+          }
         });
       } else {
         const exactTotal = getExactSplitTotal();
