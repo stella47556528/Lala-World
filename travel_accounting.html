@@ -106,6 +106,9 @@
     // 動態判斷當前模式下的分帳母數
     function getTargetAmount() { 
       if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
+        if (state.form.payMethod === '💵 現金') {
+          return Number((parseFloat(state.form.foreignAmount || 0) * parseFloat(state.form.exchangeRate || 0)).toFixed(2));
+        }
         return parseFloat(state.form.twdAmount || 0) + parseFloat(state.form.feeAmount || 0);
       }
       return parseFloat(state.form.amount || 0); 
@@ -115,6 +118,7 @@
     // 取得當前換算匯率 (純匯率，不含手續費)
     function getExchangeRate() {
       if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
+        if (state.form.payMethod === '💵 現金') return state.form.exchangeRate; // 現金模式直接回傳輸入的匯率
         const twd = parseFloat(state.form.twdAmount || 0); // 使用純台幣本金計算
         const fAmount = parseFloat(state.form.foreignAmount || 0);
         if (twd > 0 && fAmount > 0) return (twd / fAmount).toFixed(4);
@@ -124,7 +128,7 @@
 
     // 取得手續費百分比
     function getFeePercentage() {
-      if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
+      if (state.form.mode === 'twd' && state.form.twdSubType === 'billed' && state.form.payMethod === '💳 信用卡') {
         const twd = parseFloat(state.form.twdAmount || 0);
         const fee = parseFloat(state.form.feeAmount || 0);
         if (twd > 0 && fee > 0) return ((fee / twd) * 100).toFixed(2);
@@ -134,6 +138,10 @@
 
     // 取得 UI 顯示用的匯率與手續費字串
     function getRateDisplayText() {
+      if (state.form.mode === 'twd' && state.form.twdSubType === 'billed' && state.form.payMethod === '💵 現金') {
+         const rate = parseFloat(state.form.exchangeRate || 0);
+         return rate > 0 ? `(匯率: ${rate})` : '(填寫匯率以計算台幣)';
+      }
       const rate = getExchangeRate();
       const feePct = getFeePercentage();
       if (rate) {
@@ -199,6 +207,15 @@
       const calculatedPayMethod = state.form.mode === 'foreign' ? state.form.payMethod : 
                                   (state.form.twdSubType === 'billed' ? state.form.payMethod : '國內台幣');
 
+      let finalExchangeRateStr = '';
+      if (state.form.mode === 'twd' && state.form.twdSubType === 'billed') {
+          if (state.form.payMethod === '💳 信用卡') {
+              finalExchangeRateStr = getExchangeRate() ? `${getExchangeRate()}${getFeePercentage() ? ` (手續費 ${getFeePercentage()}%)` : ''}` : '';
+          } else {
+              finalExchangeRateStr = state.form.exchangeRate; // 現金模式直接記錄輸入的匯率
+          }
+      }
+
       const expenseData = {
         mode: state.form.mode,
         twdSubType: state.form.twdSubType,
@@ -210,9 +227,9 @@
         splits: finalSplits,
         // 外幣已出帳的附加資料
         foreignAmount: state.form.foreignAmount,
-        feeAmount: state.form.feeAmount,
+        feeAmount: state.form.payMethod === '💳 信用卡' ? state.form.feeAmount : '',
         // 將純匯率與手續費百分比合併記錄到試算表
-        exchangeRate: getExchangeRate() ? `${getExchangeRate()}${getFeePercentage() ? ` (手續費 ${getFeePercentage()}%)` : ''}` : ''
+        exchangeRate: finalExchangeRateStr
       };
 
       showLoading("寫入 Google 試算表...");
@@ -541,21 +558,32 @@
                     <button onclick="updateForm('payMethod', '💵 現金')" class="flex-1 py-2 rounded-lg border transition-all ${state.form.payMethod === '💵 現金' ? 'bg-emerald-50 border-emerald-500 text-emerald-700 font-bold' : 'border-slate-200 text-slate-500 font-medium'}">💵 現金</button>
                   </div>
                 </div>
-                <div class="col-span-2 sm:col-span-1 mt-2">
-                  <label class="block text-xs font-bold text-slate-500 mb-1">💴 原外幣金額</label>
-                  <input type="number" oninput="updateForm('foreignAmount', this.value)" value="${state.form.foreignAmount}" placeholder="例: 10000" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                </div>
-                <div class="col-span-2 sm:col-span-1 mt-2">
-                  <label class="block text-xs font-bold text-slate-500 mb-1">🇹🇼 實際扣款台幣</label>
-                  <input type="number" oninput="updateForm('twdAmount', this.value)" value="${state.form.twdAmount}" placeholder="例: 2200" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-bold text-emerald-700" />
-                </div>
-                <div class="col-span-2 mb-2">
-                  <label class="block text-xs font-bold text-slate-500 mb-1">🏦 海外刷卡手續費 (台幣)</label>
-                  <input type="number" oninput="updateForm('feeAmount', this.value)" value="${state.form.feeAmount}" placeholder="例: 15" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                </div>
+                ${state.form.payMethod === '💵 現金' ? `
+                  <div class="col-span-2 sm:col-span-1 mt-2">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">💴 外幣金額</label>
+                    <input type="number" oninput="updateForm('foreignAmount', this.value)" value="${state.form.foreignAmount}" placeholder="例: 10000" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                  </div>
+                  <div class="col-span-2 sm:col-span-1 mt-2">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">💱 換匯匯率</label>
+                    <input type="number" step="0.0001" oninput="updateForm('exchangeRate', this.value)" value="${state.form.exchangeRate}" placeholder="例: 0.225" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                  </div>
+                ` : `
+                  <div class="col-span-2 sm:col-span-1 mt-2">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">💴 原外幣金額</label>
+                    <input type="number" oninput="updateForm('foreignAmount', this.value)" value="${state.form.foreignAmount}" placeholder="例: 5000" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                  </div>
+                  <div class="col-span-2 sm:col-span-1 mt-2">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">🇹🇼 實際扣款台幣</label>
+                    <input type="number" oninput="updateForm('twdAmount', this.value)" value="${state.form.twdAmount}" placeholder="例: 1050" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-bold text-emerald-700" />
+                  </div>
+                  <div class="col-span-2 mb-2">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">🏦 海外刷卡手續費 (台幣)</label>
+                    <input type="number" oninput="updateForm('feeAmount', this.value)" value="${state.form.feeAmount}" placeholder="例: 15" class="w-full p-2 border border-slate-300 rounded-md bg-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                  </div>
+                `}
                 <div class="col-span-2 pt-3 border-t border-slate-100 flex justify-between items-end bg-emerald-50 p-3 rounded-lg border border-emerald-100">
                   <div>
-                    <span class="block text-sm font-bold text-slate-600 mb-1">本筆台幣總成本 (含手續費)</span>
+                    <span class="block text-sm font-bold text-slate-600 mb-1">本筆台幣總成本 ${state.form.payMethod === '💳 信用卡' ? '(含手續費)' : ''}</span>
                     <span class="text-xs text-slate-400 font-bold" id="display-rate">${getRateDisplayText()}</span>
                   </div>
                   <span class="text-2xl font-black text-emerald-600 tracking-tight" id="display-total">${formatCurrency(getTargetAmount())}</span>
