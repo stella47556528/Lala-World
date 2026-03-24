@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新加坡旅程 2026 全攻略</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js (Core) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 pb-20" x-data="itineraryApp">
+
+    <!-- 標頭 -->
+    <header class="bg-white pt-12 pb-8 px-6 text-center border-b border-slate-100 shadow-sm relative overflow-hidden">
+        <div class="absolute -left-10 -top-10 opacity-5 text-emerald-500 rotate-12">
+            <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-7l-2-2"/><path d="M17 22v-7l2-2"/><path d="M7 22v-7l-2-2"/><path d="M12 15a3 3 0 0 0-3-3H7a3 3 0 0 1-3-3v0a3 3 0 0 1 3-3h2a3 3 0 0 0 3-3v0a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v0a3 3 0 0 0 3 3h2a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3h-2a3 3 0 0 0-3 3v0"/></svg>
+        </div>
+        <h1 class="text-3xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-teal-600 to-emerald-500 bg-clip-text text-transparent mb-3">
+            SINGAPORE MASTER PLAN 2026
+        </h1>
+        <div class="flex justify-center items-center gap-2 text-slate-400 font-bold uppercase tracking-[0.2em] text-[11px]">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span>2026/05/11 - 2026/05/15</span>
+        </div>
+    </header>
+
+    <!-- 頂部導航列 (控制分頁) -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md py-5 border-b border-slate-100 shadow-sm">
+        <div class="max-w-3xl mx-auto flex justify-between gap-2 px-6">
+            <template x-for="day in days" :key="day.id">
+                <button 
+                    @click="activeDay = day.id"
+                    :class="activeDay === day.id ? `bg-gradient-to-br ${day.themeColor} text-white shadow-lg scale-105 border-transparent` : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50 hover:text-slate-600'"
+                    class="flex-1 py-3 rounded-2xl text-[13px] font-black transition-all duration-300 whitespace-nowrap border shadow-sm"
+                    x-text="'Day ' + day.id">
+                </button>
+            </template>
+        </div>
+    </nav>
+
+    <!-- 主要內容區 (每天一頁) -->
+    <main class="max-w-3xl mx-auto px-6 py-12">
+        <template x-for="day in days" :key="day.id">
+            <div x-show="activeDay === day.id" 
+                 x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-x-4"
+                 x-transition:enter-end="opacity-100 translate-x-0">
+                
+                <!-- 當日主題卡片 -->
+                <div :class="`bg-gradient-to-br ${day.themeColor}`" class="p-10 rounded-[3rem] shadow-xl text-white mb-12 relative overflow-hidden">
+                    <div class="absolute right-[-20px] top-[-20px] opacity-10 rotate-12">
+                        <i data-lucide="map-pin" class="w-56 h-56"></i>
+                    </div>
+                    <p class="text-[13px] font-bold opacity-80 uppercase tracking-[0.2em] mb-3" x-text="day.fullDate"></p>
+                    <h2 class="text-2xl md:text-4xl font-black tracking-tight leading-tight" x-text="day.title"></h2>
+                </div>
+
+                <!-- 該日行程列表 -->
+                <div class="pl-1">
+                    <template x-for="(event, index) in day.events" :key="index">
+                        <div class="relative pl-12 mb-10 group">
+                            <!-- 垂直引導線 -->
+                            <div class="absolute left-[21px] top-6 bottom-[-40px] w-[3px] bg-slate-100 group-last:hidden"></div>
+                            
+                            <!-- 時間軸圖示 -->
+                            <div class="absolute left-0 top-1.5 w-11 h-11 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center z-10 shadow-sm transition-transform group-hover:scale-110">
+                                <span class="text-xl" x-text="event.icon"></span>
+                            </div>
+
+                            <!-- 行程卡片內容 -->
+                            <div class="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm relative transition-all hover:shadow-md">
+                                
+                                <!-- 導航按鈕 -->
+                                <a :href="getMapsUrl(event)" target="_blank" class="absolute top-6 right-6 w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 active:scale-90 transition-transform shadow-sm">
+                                    <i data-lucide="navigation" class="w-6 h-6"></i>
+                                </a>
+
+                                <div class="flex flex-col mb-2">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="text-[13px] font-black text-teal-600 tracking-tight bg-teal-50/50 px-3 py-1 rounded-lg" x-text="event.time"></span>
+                                        <span class="text-[12px] text-slate-400 font-bold uppercase tracking-[0.1em] bg-slate-50 px-2.5 py-1 rounded-md" x-text="event.type"></span>
+                                    </div>
+                                    <h3 class="text-xl font-black text-slate-800 pr-12 leading-tight" x-text="event.title"></h3>
+                                </div>
+
+                                <!-- 標籤 Tags -->
+                                <div class="flex flex-wrap gap-1.5 mt-3 mb-4" x-show="event.tags && event.tags.length > 0">
+                                    <template x-for="tag in event.tags">
+                                        <span :class="tagStyles[tag].classes" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold border shadow-sm mr-1.5">
+                                            <i :data-lucide="tagStyles[tag].icon" class="w-3 h-3 mr-1.5"></i>
+                                            <span x-text="tagStyles[tag].text"></span>
+                                        </span>
+                                    </template>
+                                </div>
+
+                                <p class="text-slate-600 text-[15px] leading-relaxed whitespace-pre-wrap mb-4 font-medium" x-text="event.desc"></p>
+
+                                <!-- 備註 Notes -->
+                                <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 mt-4" x-show="event.notes && event.notes.length > 0">
+                                    <div class="flex items-center text-[12px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                                        <i data-lucide="info" class="w-4 h-4 mr-2"></i> 詳細規劃與備註
+                                    </div>
+                                    <ul class="text-[13px] text-slate-600 space-y-3">
+                                        <template x-for="(note, nIdx) in event.notes">
+                                            <li class="flex gap-3 leading-relaxed font-medium">
+                                                <span class="text-teal-400 flex-shrink-0 mt-1">•</span>
+                                                <span class="flex-1" x-html="note"></span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </main>
+
+    <footer class="text-center py-16 px-6 bg-slate-50 border-t border-slate-200 mt-12">
+        <div class="h-px w-24 bg-slate-200 mx-auto mb-10"></div>
+        <p class="text-[12px] font-bold text-slate-300 uppercase tracking-[0.5em]">
+            Designed for Singapore Trip 2026
+        </p>
+    </footer>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('itineraryApp', () => ({
+                activeDay: 1, // 預設顯示 Day 1
+                
+                tagStyles: {
+                    nobeef: { text: '無牛肉選項', classes: 'bg-red-50 text-red-600 border-red-100', icon: 'alert-triangle' },
+                    shopping: { text: '免稅退稅點', classes: 'bg-blue-50 text-blue-600 border-blue-100', icon: 'shopping-bag' },
+                    important: { text: '重要限時', classes: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: 'alert-triangle' },
+                    food: { text: '美食推薦', classes: 'bg-green-50 text-green-600 border-green-100', icon: 'utensils' },
+                    mustsee: { text: '必訪景點', classes: 'bg-teal-50 text-teal-600 border-teal-100', icon: 'camera' }
+                },
+                
+                getMapsUrl(event) {
+                    const query = encodeURIComponent(event.title + (event.type === '飯店' || event.type === '移動' ? ' ' + event.desc : ''));
+                    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+                },
+
+                init() {
+                    lucide.createIcons();
+                    this.$watch('activeDay', () => {
+                        this.$nextTick(() => {
+                            lucide.createIcons();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        });
+                    });
+                },
+
+                days: [
+                    {
+                        id: 1,
+                        fullDate: '2026/05/11 (一)',
+                        title: '啟程：安頓、水上巡航與高空夜景',
+                        themeColor: 'from-teal-600 to-emerald-700',
+                        events: [
+                            { 
+                                time: '06:00', icon: '🚗', type: '出發', title: '桃園機場 (T2)', 
+                                desc: '4點從石川出發。' 
+                            },
+                            { 
+                                time: '08:00', icon: '🛫', type: '航班', title: '桃園機場 (T2) 起飛', 
+                                desc: '帶著雀躍的心情，起飛前往新加坡！' 
+                            },
+                            { 
+                                time: '12:40', icon: '🛬', type: '抵達', title: '新加坡樟宜機場 (T2)', 
+                                desc: '順利抵達，準備辦理入境與提取行李。' 
+                            },
+                            { 
+                                time: '13:40 - 14:20', icon: '🚕', type: '移動', title: '預約 Maxi Cab 7-9 人座', 
+                                desc: '預計用 Grab 預約，我和哥各預約一台至飯店。',
+                                notes: ['<strong>總召注意：</strong>小童務必訂購有安全座椅的車型！']
+                            },
+                            { 
+                                time: '14:20 - 14:45', icon: '🏨', type: '飯店', title: 'Holiday Inn Singapore Atrium', 
+                                desc: '📍 住址：317 Outram Road, 169075\n📞 電話：+65 6731 7199',
+                                notes: [
+                                    '先寄放行李就開始旅程 (15:00 才可入房)。',
+                                    '<strong>重要任務：</strong>先去地鐵站辦理葵（小童）的兒童卡。'
+                                ]
+                            },
+                            { 
+                                time: '14:45 - 15:00', icon: '🚕', type: '移動', title: '前往新達城 (Suntec City)', 
+                                desc: '📍 地址：3 Temasek Blvd, 038983' 
+                            },
+                            { 
+                                time: '15:00 - 15:15', icon: '⛲', type: '景點', title: '財富之泉 (Fountain of Wealth) 🌟', 
+                                desc: '散步至商場 B1 正中央的財富之泉廣場。',
+                                notes: ['<strong>亮點：</strong>執行「右手摸水、順時針繞三圈」的吸金儀式。這段散步剛好幫助消化，且全都在冷氣範圍或陰涼處，長輩與小童毫不費力。'],
+                                tags: ['mustsee']
+                            },
+                            { 
+                                time: '15:20 - 16:15', icon: '☕', type: '遲午餐', title: '土司工坊 (Toast Box)', 
+                                desc: '📍 位置：Suntec Tower 5 的 B1\n摸完水後直接在商場內找土司工坊入座吹冷氣。',
+                                notes: [
+                                    '<strong>🍞 傳統咖椰吐司套餐：</strong>這是新加坡靈魂！烤脆吐司夾牛油與咖椰醬。總召請教全家「在地吃法」：將半熟蛋滴入黑醬油與白胡椒打勻，拿吐司沾著蛋液吃。小姪女不敢吃生蛋可單吃吐司。',
+                                    '<strong>🍞 花生厚片吐司：</strong>如果小童不習慣斑蘭葉味道，這是完美的安撫甜點。',
+                                    '<strong>🍲 新加坡叻沙：</strong>濃郁椰奶、蝦米與特製辣椒，非常開胃。建議大人點一碗分食嚐鮮！',
+                                    '<strong>🍲 南洋咖哩雞：</strong>雞肉與馬鈴薯燉得極爛，適合長輩。可配法式麵包沾醬吃。',
+                                    '<strong>☕ 點餐神術語：</strong><br>• Kopi (煉乳咖啡) / Kopi C (鮮奶咖啡：無糖淡奶+微糖，更滑順)<br>• Teh C (鮮奶茶：長輩首選)<br>• 冰美祿 (小童專屬飲品)<br>• 自製清涼薏米水 (退火消暑神物)'
+                                ],
+                                tags: ['food']
+                            },
+                            { 
+                                time: '16:15 - 17:30', icon: '🦆', type: '景點', title: '水陸兩棲鴨子船 (Duck Tours)', 
+                                desc: '📍 位置：Suntec Tower 2 的 1F\n動線：16:15 報到出示憑證，16:30 準時發車。免走路輕鬆飽覽港灣風光。',
+                                tags: ['mustsee']
+                            },
+                            { 
+                                time: '17:30 - 17:45', icon: '🚕', type: '移動', title: '新達城 ➔ 金沙酒店 Tower 3', 
+                                desc: '鴨子船下車後，叫 Grab 6-Seater 前往金沙酒店 3 號塔樓（空中花園入口處），車程約 5-8 分鐘。' 
+                            },
+                            { 
+                                time: '17:45 - 19:15', icon: '🏙️', type: '景點', title: '金沙空中花園觀景台 (Sands SkyPark) 🌟', 
+                                desc: '[停留 1.5 小時] 搭乘高速電梯直達 56 樓。前 45 分鐘先拍下城市全景；18:30 後等待夕陽；19:00 城市亮燈，拍下極致奢華的夜景全家福。',
+                                notes: ['💡 <strong>總召提醒：</strong> 觀景台上有販售飲料與點心的小吧台，長輩如果走累了可以買杯飲料稍作休息。'],
+                                tags: ['mustsee']
+                            },
+                            { 
+                                time: '19:15 - 19:30', icon: '🚕', type: '移動', title: '金沙酒店 ➔ 老巴剎', 
+                                desc: '從金沙叫 Grab 直奔老巴剎，大約 5-8 分鐘車程。' 
+                            },
+                            { 
+                                time: '19:30 - 21:00', icon: '🍢', type: '晚餐', title: '老巴剎美食廣場 (Lau Pa Sat)', 
+                                desc: '神級銜接：7 點半抵達剛好「封街烤肉 (Satay Street)」火力全開、氣氛最熱絡！',
+                                notes: [
+                                    '<strong>🛡️ 找位戰略：</strong>走到戶外文達街 (Boon Tat St.)。第一步「佔位(Chope)」：找靠近烤肉但非正下風處的大圓桌，用面紙/雨傘佔位。第二步「分工」：總召點沙嗲主食，哥嫂買飲料甜點。',
+                                    '<strong>🥩 炭烤沙嗲：</strong>找人潮最多的 Best Satay 7或8號。點大份「牛肉沙嗲」(肉質軟嫩帶油香)，「雞肉沙嗲」(適合小姪女)，還有附贈的鮮甜烤蝦。',
+                                    '<strong>🍜 飽足主食：</strong>「福建炒蝦麵」偏軟爛鮮甜完全不辣，極適合長輩；「海南雞飯」則是小姪女的保底神菜。',
+                                    '<strong>🔥 大人加碼：</strong>參巴烤魟魚 (魔鬼魚，肉質絲滑無刺)、黑白炒蘿蔔糕。',
+                                    '<strong>🥤 解膩飲品：</strong>甘蔗檸檬汁 (酸甜解膩最強武器，買大杯！)、金桔水 (清涼退火)。',
+                                    '<strong>⚠️ 現場防禦叮嚀：</strong>請總召務必在背包準備「整包濕紙巾」！戶外無免費衛生紙，吃沙嗲絕對會沾手。準備小鈔結帳最快。'
+                                ],
+                                tags: ['food']
+                            }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        fullDate: '2026/05/12 (二)',
+                        title: '探索：標誌性地標與夜景 🌸',
+                        themeColor: 'from-emerald-500 to-green-600',
+                        events: [
+                            { time: '09:00', icon: '☕', type: '早餐', title: '傳統咖椰吐司 (待安排)', desc: '體驗新加坡道地的咖椰吐司與半熟蛋。', tags: ['food', 'nobeef'] },
+                            { time: '10:30', icon: '🦁', type: '景點', title: '魚尾獅公園 (Merlion Park)', desc: '新加坡必訪地標，拍照留念。' },
+                            { time: '14:00', icon: '🌺', type: '景點', title: '濱海灣花園 (Gardens by the Bay)', desc: '參觀花穹 (Flower Dome) 與雲霧林 (Cloud Forest)。', tags: ['mustsee'] },
+                            { time: '19:45', icon: '✨', type: '景點', title: '天空樹燈光秀 (Supertree Grove)', desc: '每晚的免費燈光音樂秀，極具視覺震撼。' },
+                        ]
+                    },
+                    {
+                        id: 3,
+                        fullDate: '2026/05/13 (三)',
+                        title: '聖淘沙：歡樂度假島 🎢',
+                        themeColor: 'from-blue-600 to-cyan-600',
+                        events: [
+                            { time: '09:30', icon: '🚡', type: '交通', title: '前往聖淘沙', desc: '搭乘空中纜車或捷運進入聖淘沙島。' },
+                            { time: '10:00', icon: '🎢', type: '景點', title: '聖淘沙全日遊 (待規劃)', desc: '可安排新加坡環球影城、S.E.A. 海洋館或斜坡滑車。' },
+                        ]
+                    },
+                    {
+                        id: 4,
+                        fullDate: '2026/05/14 (四)',
+                        title: '文化：多元色彩與購物 🕌',
+                        themeColor: 'from-amber-500 to-orange-600',
+                        events: [
+                            { time: '10:00', icon: '🏮', type: '景點', title: '異國文化區巡禮', desc: '探索牛車水、小印度或甘榜格南的特色街道。' },
+                            { time: '15:00', icon: '🛍️', type: '購物', title: '烏節路 或 濱海灣金沙', desc: '購物天堂，安排退稅購物行程與尋寶。', tags: ['shopping'] },
+                        ]
+                    },
+                    {
+                        id: 5,
+                        fullDate: '2026/05/15 (五)',
+                        title: '賦歸：樟宜機場與回台 ✈️',
+                        themeColor: 'from-slate-600 to-slate-800',
+                        events: [
+                            { time: 'TBD', icon: '🏨', type: '動作', title: '退房與最後採買', desc: '整理行李，準備前往機場。' },
+                            { time: 'TBD', icon: '🛫', type: '航班', title: '班機起飛 (航班待定)', desc: '帶著滿滿的新加坡回憶返回台灣。' },
+                        ]
+                    }
+                ]
+            }));
+        });
+    </script>
+</body>
+</html>
