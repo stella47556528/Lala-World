@@ -202,10 +202,17 @@
             border: 1px solid #fbd38d;
         }
 
+		.status-done {
+            background-color: #f5f5f5;
+            color: #757575;
+            border: 1px solid #e0e0e0;
+        }
+
         /* 針對不同類別的微調 */
         .card.app .icon-wrapper { background-color: #e3f2fd; color: #2196f3; }
         .card.calc .icon-wrapper { background-color: #e8f5e9; color: #4caf50; }
         .card.trip .icon-wrapper { background-color: #fce4ec; color: #e91e63; }
+		.card.family .icon-wrapper { background-color: #e8eaf6; color: #5c6bc0; } /* 新加坡家族之旅風格：靛藍色 */																													   
         .card.finance .icon-wrapper { background-color: #e0f2f1; color: #00897b; } /* 記帳工具風格：深青色 */
 
         /* 登入畫面樣式 */
@@ -365,7 +372,7 @@
             <div class="icon-wrapper">🌸</div>
             <h2>大阪無牛美食之旅</h2>
             <p>2026 關西冒險記 (2/26 - 3/2)。包含喬巴周邊狩獵地圖與精心挑選的無牛餐廳清單。</p>
-            <span class="status-badge status-ready">準備出發</span>
+            <span class="status-badge status-done">已完成</span>
         </a>
 
         <!-- 卡片 4: 記帳工具 -->
@@ -375,6 +382,21 @@
             <p>專為冒險設計的記帳工具。輕鬆記錄每筆開銷，掌握旅途預算。</p>
             <span class="status-badge status-ready">啟用中</span>
         </a>
+
+        <!-- 卡片 5: 新加坡家族之旅 -->
+        <a href="singapore2026.html" class="card family" onclick="checkLink(event, 'singapore2026.html')">
+            <div class="icon-wrapper">🦁</div>
+            <h2>新加坡家族之旅</h2>
+            <p>2026 獅城漫遊。包含適合長輩的景點規畫、無障礙交通資訊與在地美食清單。</p>
+            <span class="status-badge status-wip">規畫中</span>
+        </a>
+												
+																										  
+												
+										  
+																														
+																  
+			
 
     </div>
 
