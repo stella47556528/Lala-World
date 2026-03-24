@@ -7,7 +7,12 @@
     
     <!-- 防止搜尋引擎索引此網頁 -->
     <meta name="robots" content="noindex, nofollow">
-    
+
+	<!-- 強制瀏覽器不快取此 HTML (開發與頻繁更新時使用) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+	
     <!-- PWA 相關設定 -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff90a0">
@@ -437,11 +442,27 @@
             }
         });
 
-        // PWA Service Worker 註冊
+         // PWA Service Worker 註冊與強制更新邏輯
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
-                    .then((reg) => console.log('Service Worker 註冊成功:', reg.scope))
+                    .then((reg) => {
+                        console.log('Service Worker 註冊成功:', reg.scope);
+                        // 強制檢查是否有新的 service-worker.js 版本
+                        reg.update();
+                        
+                        // 監聽更新完成並提示/自動刷新
+                        reg.onupdatefound = () => {
+                            const installingWorker = reg.installing;
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('發現新版本，正在更新快取...');
+                                    // 為了確保手機端能抓到最新版，這裡可選擇自動重整：
+                                    // window.location.reload(); 
+                                }
+                            };
+                        };
+                    })
                     .catch((err) => console.log('Service Worker 註冊失敗:', err));
             });
         }
