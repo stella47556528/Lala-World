@@ -515,7 +515,7 @@
     <!-- 主要內容區 -->
     <main class="max-w-3xl mx-auto px-6 py-10">
         
-        <!-- 總覽頁面 (activeDay === 0) 橫條顯示設計 -->
+        <!-- 總覽頁面 (activeDay === 0) 橫條垂直顯示設計 -->
         <div x-show="activeDay === 0" 
              x-cloak
              x-transition:enter="transition ease-out duration-300"
@@ -530,17 +530,17 @@
                  <h2 class="text-2xl md:text-4xl font-black tracking-tight leading-tight">行程總覽與住宿配置</h2>
             </div>
 
-            <!-- 總覽列表 (橫條式設計) -->
+            <!-- 總覽列表 (垂直堆疊設計) -->
             <div class="flex flex-col space-y-6">
                 <template x-for="day in days" :key="'overview-'+day.id">
-                    <div @click="activeDay = day.id; window.scrollTo({ top: 0, behavior: 'smooth' });" class="bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group relative overflow-hidden flex flex-col md:flex-row items-stretch">
+                    <div @click="activeDay = day.id; window.scrollTo({ top: 0, behavior: 'smooth' });" class="bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group relative overflow-hidden flex flex-col items-stretch">
                         <!-- 左側動態漸層色條 -->
                         <div :class="`absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-b ${day.themeColor} transition-all duration-300 group-hover:w-4`"></div>
 
-                        <div class="p-6 md:p-8 flex flex-col md:flex-row w-full gap-6 md:gap-8 pl-8 md:pl-10">
+                        <div class="p-6 md:p-8 flex flex-col w-full gap-4 md:gap-5 pl-8 md:pl-10">
                             <!-- 區塊 1：天數與標題 -->
-                            <div class="md:w-5/12 flex flex-col justify-center">
-                                <div class="flex items-center gap-3 mb-3">
+                            <div class="flex flex-col">
+                                <div class="flex items-center gap-3 mb-2">
                                     <span class="text-[12px] font-black px-3 py-1 rounded-lg bg-slate-100 text-slate-600 group-hover:bg-slate-200 transition-colors">Day <span x-text="day.id"></span></span>
                                     <span class="text-[12px] font-bold text-slate-400 tracking-widest uppercase" x-text="day.fullDate"></span>
                                 </div>
@@ -548,18 +548,16 @@
                             </div>
 
                             <!-- 區塊 2：行程亮點 (精簡箭頭呈現) -->
-                            <div class="md:w-4/12 flex flex-col justify-center">
-                                <div class="flex items-start gap-2.5">
-                                    <i data-lucide="map" class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-1"></i>
-                                    <p class="text-[13.5px] text-slate-600 leading-relaxed font-medium" 
-                                       x-html="day.highlights.join('<span class=\'text-teal-400 mx-1.5 font-bold\'>➔</span>')">
-                                    </p>
-                                </div>
+                            <div class="flex items-start gap-2.5 mt-1">
+                                <i data-lucide="map" class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-1"></i>
+                                <p class="text-[13.5px] text-slate-600 leading-relaxed font-medium" 
+                                   x-html="day.highlights.join('<span class=\'text-teal-400 mx-1.5 font-bold\'>➔</span>')">
+                                </p>
                             </div>
 
                             <!-- 區塊 3：住宿資訊 -->
-                            <div class="md:w-3/12 flex flex-col justify-center mt-2 md:mt-0">
-                                <div class="bg-slate-50 p-4 rounded-2xl flex md:flex-col lg:flex-row items-center md:items-start lg:items-center gap-3 md:gap-4 border border-slate-100 group-hover:bg-blue-50/50 transition-colors h-full md:h-auto">
+                            <div class="mt-4">
+                                <div class="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 md:gap-4 border border-slate-100 group-hover:bg-blue-50/50 transition-colors w-full">
                                     <div class="bg-white p-2.5 rounded-xl shadow-sm flex-shrink-0">
                                         <i data-lucide="bed-double" class="w-5 h-5 text-blue-600"></i>
                                     </div>
