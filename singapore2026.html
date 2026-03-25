@@ -23,7 +23,7 @@
     <script>
         function itineraryApp() {
             return {
-                activeDay: 4, // 預設顯示更新的 Day 4 以供檢視
+                activeDay: 0, // 預設顯示 0，即「總覽首頁」
                 
                 tagStyles: {
                     nobeef: { text: '無牛肉選項', classes: 'bg-red-50 text-red-600 border-red-100', icon: 'alert-triangle' },
@@ -39,10 +39,8 @@
                 },
 
                 init() {
-                    // 初始化時載入圖示 (加入防呆檢查)
                     if (window.lucide) { lucide.createIcons(); }
                     
-                    // 當切換天數時，重新繪製圖示並捲回頂部
                     this.$watch('activeDay', () => {
                         this.$nextTick(() => {
                             if (window.lucide) { lucide.createIcons(); }
@@ -55,8 +53,10 @@
                     {
                         id: 1,
                         fullDate: '2026/05/11 (一)',
-                        title: '充裕安頓、水上巡航與 1.5 小時極致高空夜景',
+                        title: '充裕安頓、水上巡航與極致高空夜景',
                         themeColor: 'from-teal-600 to-emerald-700',
+                        hotel: 'Holiday Inn Singapore Atrium',
+                        highlights: ['抵達星耀樟宜與飯店安頓', '新達城財富之泉吸金儀式', '水陸兩棲鴨子船港灣巡航', '金沙空中花園賞夕陽與夜景', '老巴剎美食廣場大啖沙嗲'],
                         events: [
                             { 
                                 time: '06:00', icon: '🚗', type: '出發', title: '桃園機場 (T2)', 
@@ -142,8 +142,10 @@
                     {
                         id: 2,
                         fullDate: '2026/05/12 (二)',
-                        title: '萬禮早鳥雙園、國寶螃蟹與兩大頂級聲光秀 🔒',
+                        title: '萬禮早鳥雙園、國寶螃蟹與兩大頂級聲光秀',
                         themeColor: 'from-emerald-500 to-green-600',
+                        hotel: 'Holiday Inn Singapore Atrium',
+                        highlights: ['亞坤咖椰吐司外帶早餐', '動物園餵亞洲象、白犀牛與長頸鹿', '松發肉骨茶冷氣回血', '珍寶海鮮大啖國寶雙蟹', '金沙水舞秀與擎天樹燈光秀'],
                         events: [
                             { 
                                 time: '07:00 - 08:30', icon: '🍞', type: '早餐', title: '亞坤咖椰吐司 (外帶回飯店)', 
@@ -258,8 +260,10 @@
                     {
                         id: 3,
                         fullDate: '2026/05/13 (三)',
-                        title: '俐落退房、傳統早市、輕裝溫室與星空水舞秀 🔒',
+                        title: '俐落退房、傳統早市、輕裝溫室與星空水舞',
                         themeColor: 'from-blue-600 to-cyan-600',
+                        hotel: '聖淘沙悅樂酒店 (Village Hotel Sentosa)',
+                        highlights: ['中峇魯市場吃水粿與牛腩粉', '魚尾獅公園經典打卡', '濱海灣雙溫室仙境漫步', '金沙美食街分進合擊', '巴拉灣海灘踏浪與時光之翼水舞秀'],
                         events: [
                             { 
                                 time: '07:30 - 08:00', icon: '🧳', type: '退房', title: '飯店退房與寄放行李 (Holiday Inn Atrium)', 
@@ -349,8 +353,10 @@
                     {
                         id: 4,
                         fullDate: '2026/05/14 (四)',
-                        title: '異國巡禮、彩虹快閃、神級雞飯與夕陽踏浪滑車 🔒',
+                        title: '異國巡禮、彩虹快閃、神級雞飯與夕陽滑車',
                         themeColor: 'from-amber-500 to-orange-600',
+                        hotel: '聖淘沙悅樂酒店 (Village Hotel Sentosa)',
+                        highlights: ['小印度區與陳東齡彩色別墅', '牛車水佛牙寺與寶塔街', '完美閃避人潮品嚐天天海南雞飯', '舊禧街彩虹警察局與阿拉伯區蘇丹回教堂', '天際線斜坡滑車極速體驗'],
                         events: [
                             { 
                                 time: '08:00 - 09:00', icon: '🍳', type: '早餐', title: '聖淘沙島上輕鬆吃', 
@@ -452,6 +458,8 @@
                         fullDate: '2026/05/15 (五)',
                         title: '待規劃...',
                         themeColor: 'from-slate-600 to-slate-800',
+                        hotel: '待安排',
+                        highlights: ['Day 5 行程準備中'],
                         events: [
                             { time: 'TBD', icon: '📌', type: '規劃中', title: 'Day 5 行程準備中', desc: '隨時可以加入您的想法與安排。' }
                         ]
@@ -461,7 +469,7 @@
         }
     </script>
 
-    <!-- 5. Alpine.js (必須放在資料定義腳本的後方) -->
+    <!-- 5. Alpine.js -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
@@ -481,14 +489,23 @@
         </div>
     </header>
 
-    <!-- 頂部導航列 -->
+    <!-- 頂部導航列 (含總覽按鈕) -->
     <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md py-4 border-b border-slate-100 shadow-sm">
-        <div class="max-w-3xl mx-auto flex justify-between gap-2 px-6">
+        <div class="max-w-3xl mx-auto flex justify-start sm:justify-center gap-2 px-6 overflow-x-auto no-scrollbar pb-2 sm:pb-0">
+            <!-- 總覽按鈕 -->
+            <button 
+                @click="activeDay = 0"
+                :class="activeDay === 0 ? 'bg-slate-800 text-white shadow-md scale-105 border-transparent' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50 hover:text-slate-600'"
+                class="flex-shrink-0 px-5 py-3 rounded-2xl text-[13px] font-black transition-all duration-300 whitespace-nowrap border">
+                總覽
+            </button>
+            
+            <!-- 天數按鈕 -->
             <template x-for="day in days" :key="day.id">
                 <button 
                     @click="activeDay = day.id"
                     :class="activeDay === day.id ? `bg-gradient-to-br ${day.themeColor} text-white shadow-md scale-105 border-transparent` : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50 hover:text-slate-600'"
-                    class="flex-1 py-3 rounded-2xl text-[13px] font-black transition-all duration-300 whitespace-nowrap border"
+                    class="flex-shrink-0 px-5 py-3 rounded-2xl text-[13px] font-black transition-all duration-300 whitespace-nowrap border"
                     x-text="'Day ' + day.id">
                 </button>
             </template>
@@ -497,8 +514,71 @@
 
     <!-- 主要內容區 -->
     <main class="max-w-3xl mx-auto px-6 py-10">
+        
+        <!-- 總覽頁面 (activeDay === 0) 橫條顯示設計 -->
+        <div x-show="activeDay === 0" 
+             x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0">
+            
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-8 md:p-10 rounded-[2.5rem] shadow-xl text-white mb-10 relative overflow-hidden">
+                 <div class="absolute right-[-20px] top-[-20px] opacity-10 rotate-12">
+                    <i data-lucide="map" class="w-56 h-56"></i>
+                 </div>
+                 <p class="text-[13px] font-bold opacity-80 uppercase tracking-[0.2em] mb-2">Overview</p>
+                 <h2 class="text-2xl md:text-4xl font-black tracking-tight leading-tight">行程總覽與住宿配置</h2>
+            </div>
+
+            <!-- 總覽列表 (橫條式設計) -->
+            <div class="flex flex-col space-y-6">
+                <template x-for="day in days" :key="'overview-'+day.id">
+                    <div @click="activeDay = day.id; window.scrollTo({ top: 0, behavior: 'smooth' });" class="bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group relative overflow-hidden flex flex-col md:flex-row items-stretch">
+                        <!-- 左側動態漸層色條 -->
+                        <div :class="`absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-b ${day.themeColor} transition-all duration-300 group-hover:w-4`"></div>
+
+                        <div class="p-6 md:p-8 flex flex-col md:flex-row w-full gap-6 md:gap-8 pl-8 md:pl-10">
+                            <!-- 區塊 1：天數與標題 -->
+                            <div class="md:w-5/12 flex flex-col justify-center">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <span class="text-[12px] font-black px-3 py-1 rounded-lg bg-slate-100 text-slate-600 group-hover:bg-slate-200 transition-colors">Day <span x-text="day.id"></span></span>
+                                    <span class="text-[12px] font-bold text-slate-400 tracking-widest uppercase" x-text="day.fullDate"></span>
+                                </div>
+                                <h3 class="text-xl md:text-2xl font-black text-slate-800 leading-snug" x-text="day.title"></h3>
+                            </div>
+
+                            <!-- 區塊 2：行程亮點 (精簡箭頭呈現) -->
+                            <div class="md:w-4/12 flex flex-col justify-center">
+                                <div class="flex items-start gap-2.5">
+                                    <i data-lucide="map" class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-1"></i>
+                                    <p class="text-[13.5px] text-slate-600 leading-relaxed font-medium" 
+                                       x-html="day.highlights.join('<span class=\'text-teal-400 mx-1.5 font-bold\'>➔</span>')">
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- 區塊 3：住宿資訊 -->
+                            <div class="md:w-3/12 flex flex-col justify-center mt-2 md:mt-0">
+                                <div class="bg-slate-50 p-4 rounded-2xl flex md:flex-col lg:flex-row items-center md:items-start lg:items-center gap-3 md:gap-4 border border-slate-100 group-hover:bg-blue-50/50 transition-colors h-full md:h-auto">
+                                    <div class="bg-white p-2.5 rounded-xl shadow-sm flex-shrink-0">
+                                        <i data-lucide="bed-double" class="w-5 h-5 text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Night <span x-text="day.id"></span> 住宿</p>
+                                        <p class="text-[13px] font-bold text-slate-700 leading-tight" x-text="day.hotel"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- 每日詳細行程頁面 -->
         <template x-for="day in days" :key="day.id">
             <div x-show="activeDay === day.id" 
+                 x-cloak
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 translate-y-4"
                  x-transition:enter-end="opacity-100 translate-y-0">
