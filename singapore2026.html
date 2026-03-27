@@ -2,28 +2,29 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>新加坡旅程 2026 全攻略</title>
     
-    <!-- 1. Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+							
+    <script src="https://cdn.tailwindcss.com/3.4.3"></script>
     
-    <!-- 2. Lucide Icons -->
+							
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- 3. 字體設定 -->
+							
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [x-cloak] { display: none !important; }
     </style>
 
-    <!-- 4. 核心資料邏輯 (必須在 Alpine 載入前定義，保證不報錯) -->
+																					   
     <script>
         function itineraryApp() {
             return {
-                activeDay: 0, // 預設顯示更新的 Day 5 以供檢視
+                activeDay: 0, // 預設顯示 0，即「總覽首頁」
                 
                 tagStyles: {
                     nobeef: { text: '無牛肉選項', classes: 'bg-red-50 text-red-600 border-red-100', icon: 'alert-triangle' },
@@ -34,16 +35,17 @@
                 },
                 
                 getMapsUrl(event) {
+                    // 修正 Google Maps 導航跳轉語法
                     const query = encodeURIComponent(event.title + (event.type === '飯店' || event.type === '移動' ? ' ' + event.desc : ''));
                     return `https://www.google.com/maps/search/?api=1&query=${query}`;
                 },
 
                 init() {
-                    if (window.lucide) { lucide.createIcons(); }
+                    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
                     
                     this.$watch('activeDay', () => {
                         this.$nextTick(() => {
-                            if (window.lucide) { lucide.createIcons(); }
+                            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         });
                     });
@@ -402,8 +404,8 @@
                                 desc: '吃飽後外面正熱！直接過馬路走進佛牙寺內部吹超強冷氣消化！推車可搭大電梯直達各樓層，舒適地欣賞莊嚴的佛教藝術。',
                                 notes: [
                                     '<strong>🚨 總召必讀：寺廟參拜防禦守則 (佛牙寺)</strong><br>• <strong>服裝：</strong>禁止無袖/短褲，門口有免費長袍可套。<br>• <strong>脫鞋與推車：</strong>免脫鞋。無障礙極佳，推車暢行無阻。<br>• <strong>攝影禁忌：</strong>一樓大殿禁用閃光燈，四樓舍利寶室嚴禁拍照錄影，請提醒長輩。'
-																																								
-																																																			  
+										
+													 
                                 ]
                             },
                             { 
@@ -412,7 +414,7 @@
                             },
                             { 
                                 time: '13:20 - 13:35', icon: '📸', type: '景點', title: '絕美打卡：舊禧街警察局', 
-                                desc: '花 15 分鐘拍下 927 扇漸層彩虹窗戶的全家福，隨即上冷氣車。',
+                                desc: '花 15 分鐘拍下 927 扇漸層彩虹窗戶的全家福，小姪女絕對超開心！拍完隨即上冷氣車。',
                                 tags: ['mustsee']
                             },
                             { 
@@ -423,7 +425,7 @@
                                 time: '13:45 - 14:45', icon: '🕌', type: '景點', title: '深度與防禦：阿拉伯區 (蘇丹回教堂與哈芝巷)', 
                                 desc: '在壯觀的金色洋蔥圓頂前拍全家福，逛逛哈芝巷與巴梭拉街。<br><strong>避暑指令：</strong>下午 2 點氣溫極高！務必帶全家走進巷弄內的冷氣咖啡廳，或是去百年老店 Zam Zam 坐著喝冰涼拉茶避暑，確實執行 1 小時的深度慢遊兼防曬。',
                                 notes: [
-                                    '<strong>🚨 總召必讀：寺廟參拜防禦守則 (蘇丹回教堂)</strong><br>• <strong>服裝：</strong>需蓋過肩膀與膝蓋，門口有免費長袍可套。<br>• <strong>脫鞋與推車：</strong>進入內部必須脫鞋。內部鋪有地毯，建議將推車收摺放門口，牽著小姪女入內。'
+                                    '<strong>🚨 阿拉伯區防禦守則：</strong><br>• <strong>服裝：</strong>同樣需蓋過肩膝，門口有提供長袍。<br>• <strong>脫鞋與推車：</strong>進入內部必須脫鞋。內部鋪有地毯，建議將推車收摺放在門口，牽著小姪女走進去。'
                                 ],
                                 tags: ['mustsee']
                             },
@@ -451,7 +453,7 @@
                             { 
                                 time: '18:30 - 20:00', icon: '🍔', type: '晚餐', title: '晚餐與散步：海灘站 Shake Shack', 
                                 desc: '玩完滑車直攻 Shake Shack，來份肉汁瘋狂爆發的雙層安格斯牛肉堡犒賞自己！不吃漢堡的家人也可搭單軌回名勝世界商圈享用精緻晚餐。',
-																																																						
+													  
                                 tags: ['food']
                             }
                         ]
@@ -520,13 +522,13 @@
         }
     </script>
 
-    <!-- 5. Alpine.js -->
+						 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body class="bg-slate-50 text-slate-900 pb-20" x-data="itineraryApp()">
 
-    <!-- 標頭 -->
+				   
     <header class="bg-white pt-12 pb-8 px-6 text-center border-b border-slate-100 shadow-sm relative overflow-hidden">
         <div class="absolute -left-10 -top-10 opacity-5 text-emerald-500 rotate-12">
             <i data-lucide="map" class="w-48 h-48"></i>
@@ -540,10 +542,10 @@
         </div>
     </header>
 
-    <!-- 頂部導航列 (含總覽按鈕) -->
+											  
     <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md py-4 border-b border-slate-100 shadow-sm">
         <div class="max-w-3xl mx-auto flex justify-start sm:justify-center gap-2 px-6 overflow-x-auto no-scrollbar pb-2 sm:pb-0">
-            <!-- 總覽按鈕 -->
+								 
             <button 
                 @click="activeDay = 0"
                 :class="activeDay === 0 ? 'bg-slate-800 text-white shadow-md scale-105 border-transparent' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50 hover:text-slate-600'"
@@ -551,7 +553,7 @@
                 總覽
             </button>
             
-            <!-- 天數按鈕 -->
+								 
             <template x-for="day in days" :key="day.id">
                 <button 
                     @click="activeDay = day.id"
@@ -563,10 +565,10 @@
         </div>
     </nav>
 
-    <!-- 主要內容區 -->
+							
     <main class="max-w-3xl mx-auto px-6 py-10">
         
-        <!-- 總覽頁面 (activeDay === 0) 橫條垂直顯示設計 -->
+																		
         <div x-show="activeDay === 0" 
              x-cloak
              x-transition:enter="transition ease-out duration-300"
@@ -581,15 +583,15 @@
                  <h2 class="text-2xl md:text-4xl font-black tracking-tight leading-tight">行程總覽與住宿配置</h2>
             </div>
 
-            <!-- 總覽列表 (垂直堆疊設計) -->
+													  
             <div class="flex flex-col space-y-6">
                 <template x-for="day in days" :key="'overview-'+day.id">
                     <div @click="activeDay = day.id; window.scrollTo({ top: 0, behavior: 'smooth' });" class="bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group relative overflow-hidden flex flex-col items-stretch">
-                        <!-- 左側動態漸層色條 -->
+														 
                         <div :class="`absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-b ${day.themeColor} transition-all duration-300 group-hover:w-4`"></div>
 
                         <div class="p-6 md:p-8 flex flex-col w-full gap-4 md:gap-5 pl-8 md:pl-10">
-                            <!-- 區塊 1：天數與標題 -->
+															   
                             <div class="flex flex-col">
                                 <div class="flex items-center gap-3 mb-2">
                                     <span class="text-[12px] font-black px-3 py-1 rounded-lg bg-slate-100 text-slate-600 group-hover:bg-slate-200 transition-colors">Day <span x-text="day.id"></span></span>
@@ -598,7 +600,7 @@
                                 <h3 class="text-xl md:text-2xl font-black text-slate-800 leading-snug" x-text="day.title"></h3>
                             </div>
 
-                            <!-- 區塊 2：行程亮點 (精簡箭頭呈現) -->
+																				 
                             <div class="flex items-start gap-2.5 mt-1">
                                 <i data-lucide="map" class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-1"></i>
                                 <p class="text-[13.5px] text-slate-600 leading-relaxed font-medium" 
@@ -606,7 +608,7 @@
                                 </p>
                             </div>
 
-                            <!-- 區塊 3：住宿資訊 -->
+															
                             <div class="mt-4">
                                 <div class="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 md:gap-4 border border-slate-100 group-hover:bg-blue-50/50 transition-colors w-full">
                                     <div class="bg-white p-2.5 rounded-xl shadow-sm flex-shrink-0">
@@ -624,7 +626,7 @@
             </div>
         </div>
 
-        <!-- 每日詳細行程頁面 -->
+										 
         <template x-for="day in days" :key="day.id">
             <div x-show="activeDay === day.id" 
                  x-cloak
@@ -632,28 +634,28 @@
                  x-transition:enter-start="opacity-0 translate-y-4"
                  x-transition:enter-end="opacity-100 translate-y-0">
                 
-                <!-- 當日主題卡片 -->
+										   
                 <div :class="`bg-gradient-to-br ${day.themeColor}`" class="p-8 md:p-10 rounded-[2.5rem] shadow-xl text-white mb-10 relative overflow-hidden">
                     <p class="text-[13px] font-bold opacity-80 uppercase tracking-[0.2em] mb-2" x-text="day.fullDate"></p>
                     <h2 class="text-2xl md:text-3xl font-black tracking-tight leading-tight" x-text="day.title"></h2>
                 </div>
 
-                <!-- 行程列表 -->
+									 
                 <div class="pl-2">
                     <template x-for="(event, index) in day.events" :key="index">
                         <div class="relative pl-10 md:pl-12 mb-10 group">
-                            <!-- 垂直引導線 -->
+													
                             <div class="absolute left-[17px] md:left-[21px] top-6 bottom-[-40px] w-[3px] bg-slate-200 group-last:hidden"></div>
                             
-                            <!-- 圖示 -->
+										   
                             <div class="absolute left-[-4px] md:left-0 top-1.5 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center z-10 shadow-sm">
                                 <span class="text-lg md:text-xl" x-text="event.icon"></span>
                             </div>
 
-                            <!-- 行程卡片內容 -->
+													   
                             <div class="bg-white rounded-[2rem] p-5 md:p-6 border border-slate-100 shadow-sm relative transition-all hover:shadow-md">
                                 
-                                <!-- 導航按鈕 -->
+													 
                                 <a :href="getMapsUrl(event)" target="_blank" class="absolute top-5 right-5 w-10 h-10 md:w-12 md:h-12 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 active:scale-90 transition-transform shadow-sm">
                                     <i data-lucide="navigation" class="w-5 h-5 md:w-6 md:h-6"></i>
                                 </a>
@@ -666,7 +668,7 @@
                                     <h3 class="text-xl font-black text-slate-800 pr-12 leading-tight" x-text="event.title"></h3>
                                 </div>
 
-                                <!-- 標籤 Tags -->
+													
                                 <div class="flex flex-wrap gap-1.5 mt-3 mb-4" x-show="event.tags && event.tags.length > 0">
                                     <template x-for="tag in event.tags">
                                         <span :class="tagStyles[tag].classes" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold border shadow-sm mr-1.5">
@@ -678,7 +680,7 @@
 
                                 <p class="text-slate-600 text-[14px] md:text-[15px] leading-relaxed whitespace-pre-wrap mb-4 font-medium" x-html="event.desc"></p>
 
-                                <!-- 備註 Notes -->
+													 
                                 <div class="bg-slate-50 rounded-2xl p-4 md:p-5 border border-slate-100" x-show="event.notes && event.notes.length > 0">
                                     <div class="flex items-center text-[12px] font-black text-slate-400 uppercase tracking-widest mb-3">
                                         <i data-lucide="info" class="w-4 h-4 mr-2"></i> 詳細規劃與備註
