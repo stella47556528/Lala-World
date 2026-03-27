@@ -29,7 +29,7 @@
     <script>
         function itineraryApp() {
             return {
-                activeDay: 0, // 預設顯示總覽
+                activeDay: 0, // 預設顯示 Day 1 方便檢閱鴨子船地圖
                 
                 tagStyles: {
                     nobeef: { text: '無牛肉選項', classes: 'bg-red-50 text-red-600 border-red-100', icon: 'alert-triangle' },
@@ -122,7 +122,8 @@
                             },
                             { 
                                 time: '16:15 - 17:30', icon: '🦆', type: '景點', title: '水陸兩棲鴨子船 (Duck Tours)', 
-                                desc: '📍 位置：Suntec Tower 2 的 1F\n動線：16:15 報到出示憑證，16:30 準時發車。免走路輕鬆飽覽港灣風光。(路線圖↓)',
+                                desc: '📍 位置：Suntec Tower 2 的 1F\n動線：16:15 報到出示憑證，16:30 準時發車。免走路輕鬆飽覽港灣風光。(路線圖如下)',
+                                image: 'image_c85667.jpg',
                                 tags: ['mustsee']
                             },
                             { 
@@ -871,6 +872,14 @@
                                 </div>
 
                                 <p class="text-slate-600 text-[14px] md:text-[15px] leading-relaxed whitespace-pre-wrap mb-4 font-medium" x-html="event.desc"></p>
+
+                                <!-- 行程專屬附圖 -->
+                                <template x-if="event.image">
+                                    <div class="mt-2 mb-5 overflow-hidden rounded-2xl border border-slate-200 shadow-sm relative group/image">
+                                        <img :src="event.image" alt="行程附圖" class="w-full h-auto object-cover transform transition-transform duration-500 group-hover/image:scale-105">
+                                        <div class="absolute inset-0 bg-black/0 group-hover/image:bg-black/5 transition-colors duration-300"></div>
+                                    </div>
+                                </template>
 
                                 <div class="bg-slate-50 rounded-2xl p-4 md:p-5 border border-slate-100" x-show="event.notes && event.notes.length > 0">
                                     <div class="flex items-center text-[12px] font-black text-slate-400 uppercase tracking-widest mb-3">
