@@ -2,17 +2,16 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 加入 viewport-fit=cover 以完美適配 iPhone 瀏海與動態島 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>新加坡旅程 2026 全攻略</title>
     
-    <!-- 1. Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com/3.4.3"></script>
+    <!-- 1. Tailwind CSS (換回最穩定 CDN，不鎖死版本，突破 Safari 限制) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- 2. Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- 3. Alpine.js (移至 Head 並使用 defer 確保跨平台載入順序正確) -->
+    <!-- 3. Alpine.js -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <!-- 4. 字體設定 -->
@@ -21,10 +20,9 @@
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            -webkit-font-smoothing: antialiased; /* 讓 iOS 字體更平滑清晰 */
+            -webkit-font-smoothing: antialiased; 
             -moz-osx-font-smoothing: grayscale;
         }
-        /* 隱藏滾動條但保持可滾動，並加入 iOS 原生滑動慣性 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { 
             -ms-overflow-style: none; 
@@ -33,25 +31,19 @@
         }
         [x-cloak] { display: none !important; }
         
-        /* 條碼背景樣式 */
         .barcode-bg {
             background-image: repeating-linear-gradient(to right, #334155, #334155 2px, transparent 2px, transparent 4px, #334155 4px, #334155 5px, transparent 5px, transparent 8px, #334155 8px, #334155 12px, transparent 12px, transparent 14px);
         }
         
-        /* 確保 Flex 容器在 iOS Safari 上不會異常壓縮 */
         .flex-col > * { min-height: 0; }
     </style>
 
-    <!-- 5. 核心資料邏輯與強制渲染器 -->
+    <!-- 5. 核心資料邏輯 -->
     <script>
-        // 跨平台防禦：使用 MutationObserver 強制渲染 Lucide 圖示，徹底解決 iOS 破圖問題
+        // 刪除原本會導致 iOS 當機的 MutationObserver，改用更安全的 DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
-                const observer = new MutationObserver(() => {
-                    lucide.createIcons();
-                });
-                observer.observe(document.body, { childList: true, subtree: true });
             }
         });
 
@@ -73,9 +65,14 @@
                 },
 
                 init() {
-                    // 切換頁面時自動回到頂部
+                    // 使用 Alpine 內建的 nextTick 來安全渲染圖示，不會引發死迴圈
+                    this.$nextTick(() => {
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+
                     this.$watch('activeDay', () => {
                         this.$nextTick(() => {
+                            if (typeof lucide !== 'undefined') lucide.createIcons();
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         });
                     });
@@ -514,7 +511,7 @@
                             },
                             { 
                                 time: '09:30 - 09:40', icon: '🧳', type: '退房', title: '飯店 Check-out', 
-                                desc: '辦理退房手續，並清點行李件數與推車。' 
+                                desc: '總召大人辦理退房手續，哥嫂負責清點行李件數與推車。' 
                             },
                             { 
                                 time: '09:40 - 10:20', icon: '🚕', type: '移動', title: '專車直達：聖淘沙 ➔ 樟宜機場 第二航廈 (T2)', 
@@ -537,7 +534,7 @@
                                 time: '11:20 - 12:40', icon: '🛍️', type: '景點', title: '終極採買、大瀑布震撼與午餐', 
                                 desc: '<strong>視覺主秀：</strong>走進星耀樟宜，直攻 40 公尺高的世界最高室內瀑布「雨天漩渦 (Rain Vortex)」，拍下這趟旅程最震撼的全家福。',
                                 notes: [
-                                    '帶小姪女去 4 樓 (L4) 的 亞洲最大 Pokémon Center 尋寶。',
+                                    '4 樓 (L4) 的 亞洲最大 Pokémon Center 尋寶。',
                                     '直奔 1 樓 (L1) 的 Bengawan Solo，掃購全新加坡最出名的「斑蘭綠蛋糕 (Pandan Cake)」（手提上飛機）。',
                                     '在星耀樟宜地下室找間快餐（如 Shake Shack 或是 Toast Box 吐司工坊）簡單墊胃，把胃口留給飛機上的星宇航空精緻飛機餐。'
                                 ],
@@ -545,7 +542,7 @@
                             },
                             { 
                                 time: '12:40 - 13:00', icon: '🛂', type: '出境', title: '完美通關：走回 T2 離境與免稅美妝補給', 
-                                desc: '全家帶著手提行李與綠蛋糕，循著原路走 Link Bridge 回到 T2，直接進入出境海關。<br>過完護照查驗後，T2 裡面還有一座超美的室內花園「Dreamscape (夢幻花園)」！可以在這裡的免稅店快速巡視，為自己挑選保濕修護精華或術後防曬乳，用免稅甜甜價做最後衝刺。',
+                                desc: '全家帶著手提行李與綠蛋糕，循著原路走 Link Bridge 回到 T2，直接進入出境海關。<br>過完護照查驗後，T2 裡面還有一座超美的室內花園「Dreamscape (夢幻花園)」！總召大人可以在這裡的免稅店快速巡視，為自己挑選保濕修護精華或術後防曬乳，用免稅甜甜價做最後衝刺。',
                                 tags: ['shopping']
                             },
                             { 
@@ -555,7 +552,7 @@
                             },
                             { 
                                 time: '13:20 - 14:00', icon: '✈️', type: '航班', title: '登機與起飛 (航班 JX772)', 
-                                desc: '13:20 準時開始登機。帶著滿滿的戰利品、塞滿手機容量的完美照片，搭乘星宇航空平安返回台灣！🏠' 
+                                desc: '13:20 準時開始登機。帶著滿滿的戰利品、塞滿手機容量的完美照片，搭乘星宇航空平安返回台灣！' 
                             }
                         ]
                     }
