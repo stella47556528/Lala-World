@@ -2,7 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 加入 viewport-fit=cover 以完美適配 iPhone 瀏海與動態島 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>新加坡旅程 2026 全攻略</title>
     
     <!-- 1. Tailwind CSS -->
@@ -11,25 +12,52 @@
     <!-- 2. Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- 3. 字體設定 -->
+    <!-- 3. Alpine.js (移至 Head 並使用 defer 確保跨平台載入順序正確) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- 4. 字體設定 -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-font-smoothing: antialiased; /* 讓 iOS 字體更平滑清晰 */
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* 隱藏滾動條但保持可滾動，並加入 iOS 原生滑動慣性 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar { 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+            -webkit-overflow-scrolling: touch; 
+        }
         [x-cloak] { display: none !important; }
         
         /* 條碼背景樣式 */
         .barcode-bg {
             background-image: repeating-linear-gradient(to right, #334155, #334155 2px, transparent 2px, transparent 4px, #334155 4px, #334155 5px, transparent 5px, transparent 8px, #334155 8px, #334155 12px, transparent 12px, transparent 14px);
         }
+        
+        /* 確保 Flex 容器在 iOS Safari 上不會異常壓縮 */
+        .flex-col > * { min-height: 0; }
     </style>
 
-    <!-- 4. 核心資料邏輯 -->
+    <!-- 5. 核心資料邏輯與強制渲染器 -->
     <script>
+        // 跨平台防禦：使用 MutationObserver 強制渲染 Lucide 圖示，徹底解決 iOS 破圖問題
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+                const observer = new MutationObserver(() => {
+                    lucide.createIcons();
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+            }
+        });
+
         function itineraryApp() {
             return {
-                activeDay: 0, // 預設顯示 Day 1 方便檢閱鴨子船地圖
+                activeDay: 0, // 預設顯示總覽
                 
                 tagStyles: {
                     nobeef: { text: '無牛肉選項', classes: 'bg-red-50 text-red-600 border-red-100', icon: 'alert-triangle' },
@@ -45,11 +73,9 @@
                 },
 
                 init() {
-                    if (typeof lucide !== 'undefined') { lucide.createIcons(); }
-                    
+                    // 切換頁面時自動回到頂部
                     this.$watch('activeDay', () => {
                         this.$nextTick(() => {
-                            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         });
                     });
@@ -83,7 +109,8 @@
                             },
                             { 
                                 time: '13:40 - 14:20', icon: '🚕', type: '移動', title: '預約機場接送', 
-                                desc: '<strong>方案1 (Grab)：</strong>因 KKDAY 訂票有送 Grab Travel Pass，有折扣碼可用。我和哥各預約一台至飯店，注意小朋友要訂有安全座椅的車型。\n<strong>方案2 (Booking.com)：</strong>可以大家坐一台，60.77 SGD。'
+                                desc: '<strong>方案1 (Grab)：</strong>因 KKDAY 訂票有送 Grab Travel Pass，有折扣碼可用。預約兩台車至飯店。\n<strong>方案2 (Booking.com)：</strong>可以大家坐一台，60.77 SGD。',
+                                notes: ['<strong>注意事項：</strong>小童務必訂購有安全座椅的車型！']
                             },
                             { 
                                 time: '14:20 - 14:45', icon: '🏨', type: '飯店', title: '飯店 Check-in 與安頓 (Holiday Inn Atrium)', 
@@ -98,7 +125,7 @@
                                 desc: '<strong>Grab 目的地輸入：</strong>Suntec City Tower 2 (新達城 2 號塔樓) 或 Suntec City Tower 1 & 2。\n<strong>樓層與櫃位：</strong>1 樓 (Level 1) 的北翼 (North Wing) / 櫃位編號 #01-330 (BIG BUS & DUCK Tourist Hub)',
                                 notes: [
                                     '從 Tower 2 下車後，直接走進冷氣商場（一樓平面）。一進去抬頭尋找亮橘色、黃色招牌的「BIG BUS & DUCK」或鴨子圖案。',
-                                    '<strong>分頭行動：</strong>我去報到劃位水陸兩棲鴨子船 (面對船長右手邊前排視野好)；其他人去財富之泉或土司工坊先點餐。'
+                                    '<strong>分頭行動：</strong>去報到劃位水陸兩棲鴨子船 (面對船長右手邊前排視野好)；其他人去財富之泉或土司工坊先點餐。'
                                 ]
                             },
                             { 
@@ -149,7 +176,7 @@
                                     '<strong>🍜 2. 飽足主食 (長輩小童防禦)：</strong>「福建炒蝦麵」偏軟爛鮮甜完全不辣，極適合長輩；「海南雞飯」則是小姪女的保底神菜。',
                                     '<strong>🔥 3. 經典星國小吃 (加碼區)：</strong>「參巴烤魟魚 (魔鬼魚)」肉質絲滑無刺帶辣度，極度下酒！「黑白炒蘿蔔糕」黑的鹹甜交織小童愛，白的充滿蛋香。',
                                     '<strong>🥤 4. 解膩飲品區：</strong>「甘蔗檸檬汁」酸甜解膩最強武器(買大杯)！「金桔水/酸柑水」清涼退火適合長輩小童。',
-                                    '<strong>⚠️ 現場防禦小叮嚀：</strong>務必在背包準備「整包濕紙巾」！戶外無免費衛生紙，吃沙嗲絕對會沾手。準備 10/50 元小鈔結帳最快。'
+                                    '<strong>⚠️ 現場防禦叮嚀：</strong>務必在背包準備「整包濕紙巾」！戶外無免費衛生紙，吃沙嗲絕對會沾手。準備 10/50 元小鈔結帳最快。'
                                 ],
                                 tags: ['food']
                             },
@@ -537,19 +564,18 @@
         }
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="bg-slate-50 text-slate-900 pb-20" x-data="itineraryApp()">
+<body class="bg-slate-50 text-slate-900 pb-24 sm:pb-20" x-data="itineraryApp()">
 
-    <header class="bg-white pt-12 pb-8 px-6 text-center border-b border-slate-100 shadow-sm relative overflow-hidden">
-        <div class="absolute -left-10 -top-10 opacity-5 text-emerald-500 rotate-12">
+    <header class="bg-white pt-[calc(3rem+env(safe-area-inset-top))] pb-8 px-6 text-center border-b border-slate-100 shadow-sm relative overflow-hidden">
+        <div class="absolute -left-10 top-0 opacity-5 text-emerald-500 rotate-12">
             <i data-lucide="map" class="w-48 h-48"></i>
         </div>
-        <h1 class="text-3xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-teal-600 to-emerald-500 bg-clip-text text-transparent mb-3">
+        <h1 class="text-3xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-teal-600 to-emerald-500 bg-clip-text text-transparent mb-3 relative z-10">
             SINGAPORE MASTER PLAN 2026
         </h1>
-        <div class="flex justify-center items-center gap-2 text-slate-400 font-bold uppercase tracking-[0.2em] text-[11px]">
+        <div class="flex justify-center items-center gap-2 text-slate-400 font-bold uppercase tracking-[0.2em] text-[11px] relative z-10">
             <i data-lucide="calendar" class="w-4 h-4"></i>
             <span>2026/05/11 - 2026/05/15</span>
         </div>
@@ -575,7 +601,7 @@
         </div>
     </nav>
 
-    <main class="max-w-3xl mx-auto px-6 py-10">
+    <main class="max-w-3xl mx-auto px-6 py-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
         
         <!-- 總覽頁面 -->
         <div x-show="activeDay === 0" 
@@ -594,7 +620,7 @@
 
             <!-- 專屬生存守則 (折疊面板) -->
             <div x-data="{ openNotes: false }" class="bg-white border border-slate-200 rounded-[2rem] shadow-sm mb-10 overflow-hidden">
-                <button @click="openNotes = !openNotes; $nextTick(() => { if(window.lucide) lucide.createIcons(); })" 
+                <button @click="openNotes = !openNotes" 
                         class="w-full px-6 py-5 md:px-8 md:py-6 flex items-center justify-between bg-slate-50 hover:bg-blue-50/50 transition-colors">
                     <div class="flex items-center gap-4">
                         <div class="bg-blue-100 text-blue-600 p-2.5 md:p-3 rounded-xl shadow-inner">
@@ -875,9 +901,19 @@
 
                                 <!-- 行程專屬附圖 -->
                                 <template x-if="event.image">
-                                    <div class="mt-2 mb-5 overflow-hidden rounded-2xl border border-slate-200 shadow-sm relative group/image">
-                                        <img :src="event.image" alt="行程附圖" class="w-full h-auto object-cover transform transition-transform duration-500 group-hover/image:scale-105">
-                                        <div class="absolute inset-0 bg-black/0 group-hover/image:bg-black/5 transition-colors duration-300"></div>
+                                    <div class="mt-2 mb-5 overflow-hidden rounded-2xl border border-slate-200 shadow-sm relative group/image bg-slate-50 min-h-[120px] flex items-center justify-center">
+                                        <img :src="event.image" alt="行程附圖" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                                             class="w-full h-auto object-cover transform transition-transform duration-500 group-hover/image:scale-105 z-10 relative">
+                                        
+                                        <!-- 破圖優雅提示 -->
+                                        <div class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0">
+                                            <i data-lucide="image-off" class="w-8 h-8 text-slate-300 mb-2"></i>
+                                            <p class="text-[13px] font-bold text-slate-500">圖片載入失敗</p>
+                                            <p class="text-[11px] text-slate-400 mt-1">請確認 <span class="font-mono text-pink-500 bg-pink-50 px-1 rounded" x-text="event.image"></span> 已上傳至 GitHub</p>
+                                        </div>
+                                        
+                                        <div class="absolute inset-0 bg-black/0 group-hover/image:bg-black/5 transition-colors duration-300 z-20 pointer-events-none"></div>
                                     </div>
                                 </template>
 
